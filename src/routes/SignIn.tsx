@@ -45,7 +45,7 @@ export function SignIn() {
         padding: '40px 24px',
         background: '#fff',
       }}>
-        <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img src={logoIcon} alt="ProTrack" style={{ width: 36, height: 36 }} />
             <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy-800)' }}>ProTrack</span>
@@ -56,14 +56,14 @@ export function SignIn() {
               مرحبًا بعودتك
             </div>
             <div style={{ fontSize: 14, color: 'var(--ink-600)', lineHeight: 1.7 }}>
-              سجّل دخولك للوصول إلى مساحة عملك في ProTrack.
+              سجّل الدخول للوصول إلى مساحة عملك في ProTrack.
             </div>
           </div>
 
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Field
               label="البريد الإلكتروني"
-              icon="mail"
+              endIcon="mail"
               type="email"
               placeholder="name@protrack.sa"
               value={email}
@@ -73,31 +73,18 @@ export function SignIn() {
             />
             <Field
               label="كلمة المرور"
-              icon="lock"
               type={showPw ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
               onChange={setPassword}
               autoComplete="current-password"
               disabled={submitting}
-              trailing={
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--ink-500)',
-                    display: 'inline-flex',
-                    padding: 0,
-                  }}
-                  aria-label={showPw ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                >
-                  <Icon name={showPw ? 'eye-off' : 'eye'} size={16} />
-                </button>
-              }
               trailingLabel={<a style={{ color: 'var(--teal-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>نسيت؟</a>}
+              endButton={{
+                icon: showPw ? 'eye-off' : 'lock',
+                onClick: () => setShowPw((v) => !v),
+                label: showPw ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور',
+              }}
             />
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-700)', cursor: 'pointer' }}>
@@ -126,9 +113,9 @@ export function SignIn() {
               type="submit"
               variant="primary"
               size="lg"
-              iconAfter="arrow-left"
+              iconAfter="arrow-right"
               disabled={submitting}
-              style={{ width: '100%', justifyContent: 'center' }}
+              block
             >
               {submitting ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول'}
             </Button>
@@ -146,31 +133,11 @@ export function SignIn() {
               icon="key-round"
               disabled
               title="قيد التطوير"
-              style={{ width: '100%', justifyContent: 'center' }}
+              block
             >
               الدخول بالهوية الوطنية (نفاذ)
             </Button>
           </form>
-
-          <div style={{
-            padding: 12,
-            background: 'var(--info-050)',
-            border: '1px solid var(--info-100)',
-            borderRadius: 10,
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start',
-          }}>
-            <Icon name="info" size={14} style={{ color: 'var(--info-700)', marginTop: 3, flexShrink: 0 }} />
-            <div style={{ fontSize: 12, color: 'var(--ink-700)', lineHeight: 1.8 }}>
-              <b>حساب تجريبي:</b>{' '}
-              <span className="num" dir="ltr">admin@gmail.com</span>{' / '}
-              <span className="num" dir="ltr">12345678</span>
-              <br />
-              <b>فريق العرض:</b> كلمة المرور{' '}
-              <span className="num" dir="ltr">demo1234</span>
-            </div>
-          </div>
 
           <div style={{ fontSize: 12, color: 'var(--ink-500)', textAlign: 'center', lineHeight: 1.7 }}>
             بالدخول فإنك توافق على{' '}
@@ -206,7 +173,7 @@ export function SignIn() {
           filter: 'blur(4px)',
           pointerEvents: 'none',
         }} />
-        {/* Second subtle teal accent bottom-right */}
+        {/* Soft navy-blue accent bottom-right */}
         <div style={{
           position: 'absolute',
           bottom: -120,
@@ -241,13 +208,12 @@ export function SignIn() {
           </div>
           <div style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', lineHeight: 1.85, maxWidth: 440 }}>
             تتبّع مالي حيّ، صلاحيات دقيقة لكل دور، وإدارة كاملة للموردين
-            والمهندسين عبر فِرَق متعددة المواقع — من المشاريع المدنية
-            والكهربائية والميكانيكية إلى الصيانة والخدمات الفنية.
+            والمهندسين عبر فِرَق متعددة المواقع.
           </div>
           <div style={{ display: 'flex', gap: 28, marginTop: 8, flexWrap: 'wrap' }}>
-            <Stat n="9" l="وحدات تشغيلية" />
-            <Stat n="5" l="أدوار صلاحيات" />
-            <Stat n="100٪" l="عربي · RTL" />
+            <Stat n="42" l="مشروعًا نشطًا" />
+            <Stat n="+160" l="مهندسًا" />
+            <Stat n="24" l="موردًا معتمدًا" />
           </div>
         </div>
 
@@ -266,18 +232,22 @@ export function SignIn() {
 
 interface FieldProps {
   label: string;
-  icon?: string;
+  endIcon?: string;
   type?: string;
   placeholder?: string;
   value: string;
   onChange: (v: string) => void;
   autoComplete?: string;
   disabled?: boolean;
-  trailing?: React.ReactNode;
   trailingLabel?: React.ReactNode;
+  endButton?: {
+    icon: string;
+    onClick: () => void;
+    label: string;
+  };
 }
 
-function Field({ label, icon, type = 'text', placeholder, value, onChange, autoComplete, disabled, trailing, trailingLabel }: FieldProps) {
+function Field({ label, endIcon, type = 'text', placeholder, value, onChange, autoComplete, disabled, trailingLabel, endButton }: FieldProps) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -298,7 +268,6 @@ function Field({ label, icon, type = 'text', placeholder, value, onChange, autoC
         boxShadow: focused ? 'var(--shadow-focus)' : 'none',
         transition: 'border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out)',
       }}>
-        {icon && <Icon name={icon} size={16} style={{ color: 'var(--ink-500)' }} />}
         <input
           type={type}
           placeholder={placeholder}
@@ -321,7 +290,24 @@ function Field({ label, icon, type = 'text', placeholder, value, onChange, autoC
             minWidth: 0,
           }}
         />
-        {trailing}
+        {endButton && (
+          <button
+            type="button"
+            onClick={endButton.onClick}
+            aria-label={endButton.label}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--ink-500)',
+              display: 'inline-flex',
+              padding: 0,
+            }}
+          >
+            <Icon name={endButton.icon} size={16} />
+          </button>
+        )}
+        {endIcon && <Icon name={endIcon} size={16} style={{ color: 'var(--ink-500)' }} />}
       </div>
     </div>
   );
