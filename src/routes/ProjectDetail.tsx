@@ -673,14 +673,14 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
               <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
               {canEdit ? (
                 <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-start' }}>
-                  <button onClick={() => setEditing(e)} style={iconBtn()} title="تحرير">
+                  <button onClick={() => setEditing(e)} className="icon-btn" title="تحرير">
                     <Icon name="edit-3" size={14} />
                   </button>
                   <button disabled={busy} onClick={async () => {
                     if (!confirm('حذف هذا المصروف؟ سيتم تحديث الملخص المالي تلقائيًا.')) return;
                     setBusy(true);
                     try { await deleteExpense(e.id); await reload(); } finally { setBusy(false); }
-                  }} style={iconBtn('var(--danger-700)')} title="حذف">
+                  }} className="icon-btn icon-btn-danger" title="حذف">
                     <Icon name="trash-2" size={14} />
                   </button>
                 </div>
@@ -718,21 +718,6 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
       />
     </>
   );
-}
-
-function iconBtn(color = 'var(--ink-600)'): React.CSSProperties {
-  return {
-    background: 'transparent',
-    border: '1px solid var(--border-2)',
-    color,
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
 }
 
 function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave, busy }: {
@@ -926,19 +911,8 @@ function TasksTab({ tasks, projectId, projectCode, team, canEdit, reload }: {
                   setBusy(true);
                   try { await deleteTask(t.id); await reload(); } finally { setBusy(false); }
                 }}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid var(--border-2)',
-                  color: 'var(--danger-700)',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  justifySelf: 'start',
-                }}
+                className="icon-btn icon-btn-danger"
+                style={{ justifySelf: 'start' }}
                 title="حذف"
               >
                 <Icon name="trash-2" size={14} />

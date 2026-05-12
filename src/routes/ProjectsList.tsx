@@ -90,18 +90,7 @@ export function ProjectsList() {
                 <button
                   key={o.id}
                   onClick={() => setFilter(o.id)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: 999,
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    fontFamily: 'var(--font-sans)',
-                    border: '1px solid',
-                    borderColor: active ? 'var(--navy-800)' : 'var(--border-2)',
-                    background: active ? 'var(--navy-800)' : '#fff',
-                    color: active ? '#fff' : 'var(--ink-700)',
-                    cursor: 'pointer',
-                  }}
+                  className={active ? 'pill pill-active' : 'pill'}
                 >
                   {o.label}
                 </button>
