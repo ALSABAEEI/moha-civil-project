@@ -362,12 +362,13 @@ export interface NewProjectInput {
   dueDate?: string | null;
   client?: string | null;
   location?: string | null;
-  team: string[];
+  /** The project manager (مسؤول المشروع) — single user id. */
+  pmId: string;
 }
 
 export async function createProject(input: NewProjectInput): Promise<Project> {
   const { data: { user } } = await client().auth.getUser();
-  const myId = user?.id ?? null;
+  const createdBy = user?.id ?? null;
 
   const { data: row, error } = await client()
     .from('projects')
@@ -379,26 +380,22 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
       progress: input.progress,
       budget: input.budget,
       due_date: input.dueDate || null,
-      pm_id: myId,
+      pm_id: input.pmId,
       client: input.client || null,
       location: input.location || null,
-      created_by: myId,
+      created_by: createdBy,
     })
     .select()
     .single();
   if (error) throw error;
 
-  // Insert project_team rows (deduplicated). PM is added automatically.
-  const teamSet = new Set(input.team);
-  if (myId) teamSet.add(myId);
-  const team = Array.from(teamSet);
-  if (team.length > 0) {
-    const rows = team.map((uid) => ({ project_id: row.id, user_id: uid }));
-    const { error: teamError } = await client().from('project_team').insert(rows);
-    if (teamError) throw teamError;
-  }
+  // Add the PM to the project_team so they appear in the team list.
+  const { error: teamError } = await client()
+    .from('project_team')
+    .insert({ project_id: row.id, user_id: input.pmId });
+  if (teamError && !/duplicate/i.test(teamError.message)) throw teamError;
 
-  return mapProject(row, team, 0);
+  return mapProject(row, [input.pmId], 0);
 }
 
 /* =========================================================

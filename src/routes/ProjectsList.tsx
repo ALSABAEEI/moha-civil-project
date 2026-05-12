@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/Card';
 import { StatusChip } from '@/components/Chip';
 import { Progress } from '@/components/Progress';
-import { AvatarStack, Avatar } from '@/components/Avatar';
+import { AvatarStack } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { Modal } from '@/components/Modal';
@@ -196,12 +196,11 @@ function ProjectFormModal({ open, onClose, onSaved }: {
   const { personId } = useAuth();
   const disciplineNames = disciplines.map((d) => d.name);
   const defaultDiscipline = disciplineNames[0] || '';
-  const [form, setForm] = useState<Partial<NewProjectInput> & { team: string[] }>({
+  const [form, setForm] = useState<Partial<NewProjectInput>>({
     discipline: defaultDiscipline,
     status: 'progress',
     progress: 0,
     budget: 0,
-    team: [],
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -217,7 +216,7 @@ function ProjectFormModal({ open, onClose, onSaved }: {
         status: 'progress',
         progress: 0,
         budget: 0,
-        team: personId ? [personId] : [],
+        pmId: personId || people[0]?.id || '',
       });
       setErr(null);
     }
@@ -228,8 +227,8 @@ function ProjectFormModal({ open, onClose, onSaved }: {
 
   const submit = async () => {
     setErr(null);
-    if (!form.code || !form.name || !form.discipline || form.budget === undefined) {
-      setErr('الرمز، الاسم، التخصص، والميزانية حقول إلزامية.');
+    if (!form.code || !form.name || !form.discipline || form.budget === undefined || !form.pmId) {
+      setErr('الرمز، الاسم، التخصص، الميزانية، ومسؤول المشروع حقول إلزامية.');
       return;
     }
     setBusy(true);
@@ -244,7 +243,7 @@ function ProjectFormModal({ open, onClose, onSaved }: {
         dueDate: form.dueDate || null,
         client: form.client || null,
         location: form.location || null,
-        team: form.team || [],
+        pmId: form.pmId!,
       });
       await onSaved();
     } catch (e: any) {
@@ -254,13 +253,6 @@ function ProjectFormModal({ open, onClose, onSaved }: {
     } finally {
       setBusy(false);
     }
-  };
-
-  const toggleTeam = (id: string) => {
-    setForm((f) => {
-      const team = f.team || [];
-      return { ...f, team: team.includes(id) ? team.filter((x) => x !== id) : [...team, id] };
-    });
   };
 
   return (
@@ -334,43 +326,31 @@ function ProjectFormModal({ open, onClose, onSaved }: {
           <input className="input num" type="date" value={form.dueDate || ''} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
         </div>
         <div style={{ gridColumn: 'span 2' }}>
-          <label className="field-label">الفريق</label>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 8,
-            padding: 12,
-            border: '1px solid var(--border-2)',
-            borderRadius: 8,
-            background: 'var(--ink-050)',
-          }}>
-            {people.map((p) => {
-              const checked = (form.team || []).includes(p.id);
-              return (
-                <label key={p.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  background: checked ? '#fff' : 'transparent',
-                  border: checked ? '1px solid var(--teal-500)' : '1px solid transparent',
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleTeam(p.id)}
-                    style={{ accentColor: 'var(--teal-500)' }}
-                  />
-                  <Avatar person={p.id} size={22} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-800)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                </label>
-              );
-            })}
-          </div>
+          <label className="field-label">مسؤول المشروع *</label>
+          {people.length === 0 ? (
+            <div style={{
+              padding: '9px 12px',
+              background: 'var(--warning-050)',
+              border: '1px solid var(--warning-100)',
+              borderRadius: 6,
+              fontSize: 12.5,
+              color: 'var(--warning-700)',
+            }}>
+              لا يوجد أعضاء بعد. أضف عضوًا من الإعدادات → إدارة المستخدمين أولاً.
+            </div>
+          ) : (
+            <select
+              className="input"
+              value={form.pmId || ''}
+              onChange={(e) => setForm({ ...form, pmId: e.target.value })}
+            >
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
           <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 6 }}>
-            ستتم إضافتك كمدير مشروع تلقائيًا. اختر الأعضاء الإضافيين.
+            الشخص المسؤول عن إدارة هذا المشروع. يمكنك تغييره لاحقًا.
           </div>
         </div>
       </div>
