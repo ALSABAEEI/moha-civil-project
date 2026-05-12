@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Swal from 'sweetalert2';
 import { Card } from '@/components/Card';
 import { Chip } from '@/components/Chip';
 import { Button } from '@/components/Button';
@@ -8,6 +9,8 @@ import { useAppData } from '@/contexts/AppData';
 import { useAuth } from '@/stores/auth';
 import { createVendor, type NewVendorInput } from '@/data/api';
 import { toast } from '@/lib/notify';
+import { isContactsSupported, pickContacts, type PickedContact } from '@/lib/contacts';
+import { ContactImportModal } from '@/routes/ContactImportModal';
 import type { Vendor } from '@/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -30,7 +33,34 @@ export function Vendors() {
   const { vendors, loading, refresh } = useAppData();
   const { role } = useAuth();
   const [creating, setCreating] = useState(false);
+  const [importPicked, setImportPicked] = useState<PickedContact[] | null>(null);
   const canCreate = role === 'admin' || role === 'finance';
+
+  const onImportFromContacts = async () => {
+    if (!isContactsSupported()) {
+      Swal.fire({
+        icon: 'info',
+        title: 'الميزة غير متاحة على هذا الجهاز',
+        html: '<div style="font-family: var(--font-sans); color: var(--ink-700); line-height: 1.7;">استيراد جهات الاتصال متاح حاليًا على متصفّح <b>Chrome / Edge</b> على هواتف <b>Android</b> فقط، عبر اتصال آمن (HTTPS).<br/>يمكنك في الوقت الراهن إضافة الموردين يدويًا.</div>',
+        confirmButtonText: 'حسنًا',
+        confirmButtonColor: '#0F2A4A',
+        customClass: { popup: 'protrack-swal', confirmButton: 'protrack-swal-confirm' },
+      });
+      return;
+    }
+    try {
+      const picked = await pickContacts();
+      if (picked.length === 0) {
+        toast.info('لم يتم اختيار جهات اتصال');
+        return;
+      }
+      setImportPicked(picked);
+    } catch (e: any) {
+      // User cancelled the picker — silent
+      if (/canceled|cancelled|aborted/i.test(e?.message || '')) return;
+      toast.error(e?.message || 'تعذّر فتح جهات الاتصال');
+    }
+  };
 
   return (
     <>
@@ -40,18 +70,23 @@ export function Vendors() {
           borderBottom: '1px solid var(--border-1)',
           display: 'flex',
           alignItems: 'center',
+          gap: 8,
+          flexWrap: 'wrap',
         }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>الموردون</div>
             <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
               العمالة والمقاولون من الباطن المعتمدون لتنفيذ أعمال المشاريع — لا يملكون حسابات في النظام.
             </div>
           </div>
           {canCreate && (
-            <Button icon="plus" onClick={() => setCreating(true)}>مورد جديد</Button>
+            <>
+              <Button variant="secondary" icon="book-user" onClick={onImportFromContacts}>استيراد من جهات الاتصال</Button>
+              <Button icon="plus" onClick={() => setCreating(true)}>مورد جديد</Button>
+            </>
           )}
         </div>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr 1fr 1.4fr 100px',
           padding: '10px 20px',
@@ -70,7 +105,7 @@ export function Vendors() {
           <span style={{ textAlign: 'start' }}>المشاريع</span>
         </div>
         {vendors.map((v, i) => (
-          <div key={v.id} style={{
+          <div key={v.id} className="responsive-row" style={{
             display: 'grid',
             gridTemplateColumns: '2fr 1fr 1fr 1.4fr 100px',
             padding: '14px 20px',
@@ -97,6 +132,13 @@ export function Vendors() {
         open={creating}
         onClose={() => setCreating(false)}
         onSaved={async () => { setCreating(false); await refresh(); }}
+      />
+
+      <ContactImportModal
+        open={importPicked !== null}
+        picked={importPicked || []}
+        onClose={() => setImportPicked(null)}
+        onImported={async () => { setImportPicked(null); }}
       />
     </>
   );
@@ -169,7 +211,7 @@ function VendorFormModal({ open, onClose, onSaved }: {
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div style={{ gridColumn: 'span 2' }}>
           <label className="field-label">اسم المورد *</label>
           <input className="input" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: شركة نجد للأعمال الكهربائية" />

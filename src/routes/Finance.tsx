@@ -47,7 +47,7 @@ export function Finance() {
             عرض موحَّد للفواتير عبر كل المشاريع.
           </div>
         </div>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '1fr 2fr 1.4fr 1fr 1fr 130px',
           padding: '10px 20px',
@@ -67,7 +67,7 @@ export function Finance() {
           <span>الحالة</span>
         </div>
         {payments.map((p, i) => (
-          <div key={p.id} style={{
+          <div key={p.id} className="responsive-row" style={{
             display: 'grid',
             gridTemplateColumns: '1fr 2fr 1.4fr 1fr 1fr 130px',
             padding: '14px 20px',

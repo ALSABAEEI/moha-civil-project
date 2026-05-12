@@ -231,7 +231,7 @@ function Header({ project, finance, onBack }: {
           </div>
         </div>
 
-        <div style={{
+        <div className="project-stats-grid" style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
           gap: 18,
@@ -265,9 +265,9 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'su
     tone === 'warn' ? 'var(--warning-700)' :
     'var(--ink-900)';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
-      <span className="money" style={{ fontSize: 16, fontWeight: 700, color }}>{value}</span>
+      <span className="money" dir="ltr" style={{ fontSize: 16, fontWeight: 700, color, display: 'inline-block' }}>{value}</span>
     </div>
   );
 }
@@ -282,7 +282,7 @@ function OverviewTab({ project, finance }: {
 }) {
   const { people } = useAppData();
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+    <div className="overview-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
       <Card>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--ink-900)' }}>
           الجدول الزمني
@@ -352,7 +352,7 @@ function Timeline({ phases }: { phases: { id: string; label: string; start: numb
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {phases.map((ph) => (
-        <div key={ph.id} style={{
+        <div key={ph.id} className="timeline-row" style={{
           display: 'grid',
           gridTemplateColumns: '140px 1fr 100px',
           gap: 14,
@@ -548,7 +548,7 @@ function TermFormModal({ open, onClose, initial, onSave, busy }: {
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div style={{ gridColumn: 'span 2' }}>
           <label className="field-label">اسم البند *</label>
           <input className="input" value={form.title || ''}
@@ -633,7 +633,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
           </div>
         </div>
 
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '1.6fr 1fr 1fr 110px 1fr 1fr 90px',
           padding: '10px 20px',
@@ -656,7 +656,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
         {expenses.map((e, i) => {
           const vendor = vendors.find((v) => v.id === e.vendor);
           return (
-            <div key={e.id} style={{
+            <div key={e.id} className="responsive-row" style={{
               display: 'grid',
               gridTemplateColumns: '1.6fr 1fr 1fr 110px 1fr 1fr 90px',
               padding: '12px 20px',
@@ -800,7 +800,7 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave, bu
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div style={{ gridColumn: 'span 2' }}>
           <label className="field-label">اسم المصروف *</label>
           <input className="input" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: توريد كوابل 25مم" />
@@ -909,7 +909,7 @@ function TasksTab({ tasks, projectId, projectCode, team, canEdit, reload }: {
           </div>
         )}
         {tasks.map((t, i) => (
-          <div key={t.id} style={{
+          <div key={t.id} className="responsive-row" style={{
             display: 'grid',
             gridTemplateColumns: '24px 1fr 130px 110px 36px 60px',
             gap: 14,
@@ -1042,7 +1042,7 @@ function TaskFormModal({ open, onClose, projectId, projectCode, team, onSaved }:
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div style={{ gridColumn: 'span 2' }}>
           <label className="field-label">عنوان المهمة *</label>
           <input className="input" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: مراجعة مخططات حديد التسليح" />
@@ -1110,7 +1110,7 @@ function VendorsTab() {
   const { vendors } = useAppData();
   return (
     <Card pad={0}>
-      <div style={{
+      <div className="responsive-table-head" style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
         padding: '10px 20px',
@@ -1129,7 +1129,7 @@ function VendorsTab() {
         <span style={{ textAlign: 'start' }}>المشاريع</span>
       </div>
       {vendors.map((v, i) => (
-        <div key={v.id} style={{
+        <div key={v.id} className="responsive-row" style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
           padding: '14px 20px',
@@ -1225,7 +1225,7 @@ function FinanceTab({ payments, finance }: {
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>الفواتير</div>
           <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>المدفوعات والمستحقات للمشروع.</div>
         </div>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '1fr 2fr 1fr 1fr 130px',
           padding: '10px 20px',
@@ -1244,7 +1244,7 @@ function FinanceTab({ payments, finance }: {
           <span>الحالة</span>
         </div>
         {payments.map((p, i) => (
-          <div key={p.id} style={{
+          <div key={p.id} className="responsive-row" style={{
             display: 'grid',
             gridTemplateColumns: '1fr 2fr 1fr 1fr 130px',
             padding: '14px 20px',

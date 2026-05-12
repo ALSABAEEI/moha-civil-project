@@ -52,7 +52,7 @@ export function UsersManager() {
         </div>
 
         <div style={{ border: '1px solid var(--border-1)', borderRadius: 10, overflow: 'hidden' }}>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr',
           padding: '10px 20px',
@@ -73,7 +73,7 @@ export function UsersManager() {
         {(users ?? []).map((u, i, arr) => {
           const person = people.find((p) => p.id === u.id);
           return (
-            <div key={u.id} style={{
+            <div key={u.id} className="responsive-row" style={{
               display: 'grid',
               gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr',
               padding: '14px 20px',
@@ -200,7 +200,7 @@ function UserFormModal({ open, onClose, onSaved }: {
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div>
           <label className="field-label">البريد الإلكتروني *</label>
           <input className="input num" dir="ltr" type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@protrack.sa" />

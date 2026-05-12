@@ -32,7 +32,12 @@ const SYS: NavItem[] = [
   { to: '/app/settings',      label: 'الإعدادات',          icon: 'settings-2' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen, onClose }: SidebarProps = {}) {
   const { role, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,11 +48,16 @@ export function Sidebar() {
       ? location.pathname.startsWith('/app/projects')
       : location.pathname === to;
 
+  const handleNavigate = (to: string) => {
+    navigate(to);
+    onClose?.();
+  };
+
   const Item = ({ item }: { item: NavItem }) => {
     const active = isActive(item.to);
     return (
       <div
-        onClick={() => navigate(item.to)}
+        onClick={() => handleNavigate(item.to)}
         className={active ? 'nav-item nav-item-active' : 'nav-item'}
       >
         <Icon name={item.icon} size={18} stroke={1.75} />
@@ -73,16 +83,19 @@ export function Sidebar() {
   };
 
   return (
-    <aside style={{
-      width: 248,
-      background: 'var(--navy-800)',
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '14px 12px 18px',
-      borderLeft: '1px solid var(--navy-900)',
-      overflowY: 'auto',
-    }}>
+    <aside
+      className={`sidebar-drawer${mobileOpen ? ' is-open' : ''}`}
+      style={{
+        width: 248,
+        background: 'var(--navy-800)',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '14px 12px 18px',
+        borderLeft: '1px solid var(--navy-900)',
+        overflowY: 'auto',
+      }}
+    >
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -92,7 +105,16 @@ export function Sidebar() {
         marginBottom: 6,
       }}>
         <img src={logoIcon} alt="ProTrack" style={{ width: 30, height: 30 }} />
-        <span style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>ProTrack</span>
+        <span style={{ color: '#fff', fontWeight: 800, fontSize: 18, flex: 1 }}>ProTrack</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="dark-icon-btn sidebar-close-btn"
+            aria-label="إغلاق"
+          >
+            <Icon name="x" size={16} />
+          </button>
+        )}
       </div>
       <Group label="مساحة العمل" items={NAV} />
       <Group label="المالية"       items={MONEY} />

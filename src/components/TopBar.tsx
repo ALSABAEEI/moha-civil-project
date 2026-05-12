@@ -6,14 +6,26 @@ import { ROLE_LABEL } from '@/lib/roles';
 interface TopBarProps {
   title: string;
   subtitle?: string;
+  /** Called when the user taps the hamburger on mobile. */
+  onMenuClick?: () => void;
 }
 
-export function TopBar({ title, subtitle }: TopBarProps) {
+export function TopBar({ title, subtitle, onMenuClick }: TopBarProps) {
   const { role } = useAuth();
   const navigate = useNavigate();
 
   return (
     <header className="topbar">
+      {/* Hamburger — visible only at ≤768 px via CSS */}
+      <button
+        type="button"
+        onClick={onMenuClick}
+        className="topbar-icon-btn hamburger-btn"
+        aria-label="القائمة"
+      >
+        <Icon name="menu" size={18} />
+      </button>
+
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{
           fontSize: 16,
@@ -31,7 +43,7 @@ export function TopBar({ title, subtitle }: TopBarProps) {
 
       <div className="topbar-search" onClick={() => navigate('/app/search')}>
         <Icon name="search" size={16} />
-        <span>ابحث في المشاريع، الفواتير، الموردين…</span>
+        <span className="topbar-search-text">ابحث في المشاريع، الفواتير، الموردين…</span>
       </div>
 
       {role && <div className="role-chip">{ROLE_LABEL[role]}</div>}

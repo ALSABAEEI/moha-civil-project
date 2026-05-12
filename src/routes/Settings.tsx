@@ -214,7 +214,7 @@ function PasswordSection() {
       subtitle="حدّث كلمة المرور لحسابك. يجب أن تكون 8 أحرف فأكثر."
       icon="lock"
     >
-      <form onSubmit={submit} style={{
+      <form onSubmit={submit} className="form-grid" style={{
         marginTop: 14,
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',

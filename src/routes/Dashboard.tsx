@@ -88,7 +88,7 @@ export function Dashboard() {
             <div
               key={p.id}
               onClick={() => navigate(`/app/projects/${p.id}`)}
-              className="row-hover clickable"
+              className="row-hover clickable responsive-row"
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 110px 140px 100px',
@@ -166,7 +166,7 @@ export function Dashboard() {
             المصروفات المسجّلة عبر كل المشاريع.
           </div>
         </div>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
           padding: '10px 20px',
@@ -187,7 +187,7 @@ export function Dashboard() {
         {expenses.slice(0, 8).map((e, i, arr) => {
           const project = projects.find((p) => p.id === e.project);
           return (
-            <div key={e.id} style={{
+            <div key={e.id} className="responsive-row" style={{
               display: 'grid',
               gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
               padding: '12px 20px',

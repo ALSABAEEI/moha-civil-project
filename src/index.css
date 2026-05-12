@@ -63,10 +63,14 @@ textarea.input { min-height: 80px; resize: vertical; }
 .num, .money {
   font-family: var(--font-mono);
   direction: ltr;
-  unicode-bidi: isolate;
+  unicode-bidi: isolate-override;  /* hard-force LTR; some Arabic+Latin runs render
+                                      inconsistently across browsers under plain isolate */
   font-variant-numeric: tabular-nums;
 }
-.money { white-space: nowrap; }
+.money {
+  white-space: nowrap;
+  display: inline-block;            /* gives the run its own paragraph context */
+}
 
 /* Sign-in: collapse to single column on narrow screens; hide marketing panel */
 @media (max-width: 900px) {
@@ -598,4 +602,125 @@ textarea.input { min-height: 80px; resize: vertical; }
 }
 .protrack-toast-progress {
   background: rgba(23, 162, 162, 0.4) !important;
+}
+
+/* =========================================================
+   Mobile layout — sidebar drawer + responsive tables
+   ─────────────────────────────────────────────────────────
+   Breakpoints:
+     mobile  ≤ 768px → sidebar becomes drawer, tables become cards
+     compact ≤ 480px → single-col forms, role chip hides
+   ========================================================= */
+
+/* Hamburger button: hidden on desktop, shown on mobile */
+.hamburger-btn { display: none; }
+
+/* Sidebar's close button (X inside the drawer): hidden on desktop */
+.sidebar-close-btn { display: none; }
+
+/* Sidebar drawer + backdrop scaffolding (only kicks in at ≤768px) */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 19, 32, 0.5);
+  z-index: 1190;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.sidebar-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The responsive-row class is harmless on desktop — it only changes
+   behaviour inside the media query below. The same applies to
+   responsive-table-head. */
+
+@media (max-width: 768px) {
+  /* ---- Top bar adjustments ---- */
+  .hamburger-btn { display: inline-flex; }
+  .sidebar-close-btn { display: inline-flex; }
+  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar-search {
+    flex: 0 0 auto !important;
+    width: 38px !important;
+    max-width: 38px !important;
+    padding: 7px 9px !important;
+  }
+  .topbar-search-text { display: none; }
+
+  /* ---- Sidebar becomes a slide-in drawer ---- */
+  .sidebar-drawer {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 288px !important;
+    max-width: 88vw;
+    transform: translateX(100%);
+    transition: transform var(--dur-3) var(--ease-emphasized);
+    z-index: 1200;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.25);
+  }
+  .sidebar-drawer.is-open {
+    transform: translateX(0);
+  }
+
+  /* ---- Main padding tightens ---- */
+  .app-main-scroll { padding: 14px 14px !important; }
+
+  /* ---- Responsive tables: hide header, reflow rows ---- */
+  .responsive-table-head { display: none !important; }
+  .responsive-row {
+    grid-template-columns: 1fr !important;
+    grid-auto-flow: row !important;
+    row-gap: 6px !important;
+    padding: 14px 16px !important;
+  }
+  .responsive-row > * {
+    min-width: 0;
+  }
+
+  /* ---- Larger tap targets on small icon buttons ---- */
+  .icon-btn { width: 36px; height: 36px; }
+  .dark-icon-btn { width: 36px; height: 36px; }
+
+  /* ---- Project detail header KPIs: 2-col grid ---- */
+  .project-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+  .project-stats-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  /* ---- Overview tab: 2fr 1fr → single column ---- */
+  .overview-grid { grid-template-columns: 1fr !important; }
+
+  /* ---- Timeline rows: 140px 1fr 100px → stack label + bar + chip ---- */
+  .timeline-row {
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      'label  chip'
+      'bar    bar' !important;
+    gap: 6px 10px !important;
+  }
+  .timeline-row > :nth-child(1) { grid-area: label; }
+  .timeline-row > :nth-child(2) { grid-area: bar; }
+  .timeline-row > :nth-child(3) { grid-area: chip; }
+
+  /* Modal — fill viewport on small screens with comfy padding */
+  .swal2-popup { width: 92vw !important; }
+}
+
+@media (max-width: 480px) {
+  /* Form modals: 2-col → 1-col */
+  .form-grid { grid-template-columns: 1fr !important; }
+
+  /* Role chip in topbar: hide */
+  .role-chip { display: none; }
+
+  /* Even tighter main padding */
+  .app-main-scroll { padding: 12px 10px !important; }
 }

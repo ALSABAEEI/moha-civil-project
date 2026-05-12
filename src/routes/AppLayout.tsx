@@ -25,6 +25,7 @@ export function AppLayout() {
   const location = useLocation();
   const params = useParams();
   const [projectTitle, setProjectTitle] = useState<{ t: string; s: string } | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const segments = location.pathname.split('/').filter(Boolean);
   const screen = segments[1];
@@ -46,6 +47,9 @@ export function AppLayout() {
     return () => { cancelled = true; };
   }, [isProjectDetail, projectId]);
 
+  // Close the mobile drawer whenever the URL changes (after nav click).
+  useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
+
   let title = 'ProTrack';
   let subtitle: string | undefined;
   if (isProjectDetail && projectTitle) {
@@ -64,7 +68,12 @@ export function AppLayout() {
       overflow: 'hidden',
       background: 'var(--bg-app)',
     }}>
-      <Sidebar />
+      <Sidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <div
+        className={mobileNavOpen ? 'sidebar-backdrop is-open' : 'sidebar-backdrop'}
+        onClick={() => setMobileNavOpen(false)}
+        aria-hidden
+      />
       <main style={{
         flex: 1,
         display: 'flex',
@@ -72,8 +81,12 @@ export function AppLayout() {
         overflow: 'hidden',
         minWidth: 0,
       }}>
-        <TopBar title={title} subtitle={subtitle} />
-        <div style={{ flex: 1, overflow: 'auto', padding: '22px 26px' }}>
+        <TopBar
+          title={title}
+          subtitle={subtitle}
+          onMenuClick={() => setMobileNavOpen(true)}
+        />
+        <div className="app-main-scroll" style={{ flex: 1, overflow: 'auto', padding: '22px 26px' }}>
           <Outlet />
         </div>
       </main>

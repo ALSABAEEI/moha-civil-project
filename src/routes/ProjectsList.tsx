@@ -107,7 +107,7 @@ export function ProjectsList() {
       </Card>
 
       <Card pad={0}>
-        <div style={{
+        <div className="responsive-table-head" style={{
           display: 'grid',
           gridTemplateColumns: '2fr 110px 130px 130px 130px 100px',
           padding: '12px 20px',
@@ -131,7 +131,7 @@ export function ProjectsList() {
           <div
             key={p.id}
             onClick={() => navigate(`/app/projects/${p.id}`)}
-            className="row-hover clickable"
+            className="row-hover clickable responsive-row"
             style={{
               display: 'grid',
               gridTemplateColumns: '2fr 110px 130px 130px 130px 100px',
@@ -276,7 +276,7 @@ function ProjectFormModal({ open, onClose, onSaved }: {
         </Button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
         <div>
           <label className="field-label">رمز المشروع *</label>
           <input className="input num" value={form.code || ''} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="CIV-2026-015" />
