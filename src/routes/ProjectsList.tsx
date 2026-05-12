@@ -142,8 +142,9 @@ export function ProjectsList() {
           >
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-900)' }}>{p.name}</div>
-              <div className="num" style={{ fontSize: 11.5, color: 'var(--ink-500)', marginTop: 3, direction: 'ltr', textAlign: 'start' }}>
-                {p.code} · {p.discipline} · {p.client}
+              <div style={{ fontSize: 11.5, color: 'var(--ink-500)', marginTop: 3 }}>
+                <span className="num">{p.code}</span>
+                {' · '}{p.discipline}{' · '}{p.client}
               </div>
             </div>
             <StatusChip status={p.status} />

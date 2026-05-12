@@ -107,13 +107,13 @@ export function Dashboard() {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>{p.name}</div>
-                <div className="num" style={{
+                <div style={{
                   fontSize: 11,
                   color: 'var(--ink-500)',
                   marginTop: 3,
-                  direction: 'ltr',
-                  textAlign: 'start',
-                }}>{p.code} · {p.discipline}</div>
+                }}>
+                  <span className="num">{p.code}</span>{' · '}{p.discipline}
+                </div>
               </div>
               <StatusChip status={p.status} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
