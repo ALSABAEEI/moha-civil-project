@@ -644,7 +644,11 @@ textarea.input { min-height: 80px; resize: vertical; }
 /* The .responsive-row and .responsive-table-head classes are harmless on
    desktop. They only change behaviour inside the media query below. */
 
-/* ---------- ≤ 1024px (tablet portrait / narrow laptop) ---------- */
+/* ---------- ≤ 1024px (tablet portrait, phone landscape, narrow laptop) ----
+   Catches iPhone Pro Max in landscape (932-956), iPad portrait (820/834),
+   iPad landscape (1180? no — 1180 > 1024, stays desktop).
+   Wide tables, header KPIs and timeline all reflow together so anything
+   below this threshold avoids horizontal overflow. */
 @media (max-width: 1024px) {
   /* Wide tables (6–7 cols) reflow into stacked card-style rows */
   .responsive-table-head { display: none !important; }
@@ -655,10 +659,7 @@ textarea.input { min-height: 80px; resize: vertical; }
     padding: 14px 16px !important;
   }
   .responsive-row > * { min-width: 0; }
-}
 
-/* ---------- ≤ 900px (large phone landscape / small tablet) ---------- */
-@media (max-width: 900px) {
   /* Project-detail header drops 5 cols → 2 cols, progress row spans full width */
   .project-stats-grid {
     grid-template-columns: 1fr 1fr !important;
