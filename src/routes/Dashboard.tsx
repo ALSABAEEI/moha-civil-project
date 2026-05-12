@@ -81,7 +81,7 @@ export function Dashboard() {
               }}
             >
               عرض الكل
-              <Icon name="chevron-left" size={14} />
+              <Icon name="chevron-right" size={14} />
             </button>
           </div>
           {projects.slice(0, 5).map((p, i, arr) => (

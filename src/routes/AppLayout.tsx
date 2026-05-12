@@ -56,6 +56,7 @@ export function AppLayout() {
     subtitle = TITLES[screen].s;
   }
 
+  // RTL layout: first flex child appears on the RIGHT. Sidebar must come FIRST.
   return (
     <div style={{
       display: 'flex',
@@ -63,6 +64,7 @@ export function AppLayout() {
       overflow: 'hidden',
       background: 'var(--bg-app)',
     }}>
+      <Sidebar />
       <main style={{
         flex: 1,
         display: 'flex',
@@ -75,7 +77,6 @@ export function AppLayout() {
           <Outlet />
         </div>
       </main>
-      <Sidebar />
     </div>
   );
 }

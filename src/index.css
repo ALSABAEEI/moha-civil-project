@@ -67,3 +67,13 @@ textarea.input { min-height: 80px; resize: vertical; }
   font-variant-numeric: tabular-nums;
 }
 .money { white-space: nowrap; }
+
+/* Sign-in: collapse to single column on narrow screens; hide marketing panel */
+@media (max-width: 900px) {
+  .signin-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .signin-marketing {
+    display: none !important;
+  }
+}

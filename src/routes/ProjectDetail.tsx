@@ -194,7 +194,7 @@ function Header({ project, finance, onBack }: {
             alignSelf: 'flex-start',
           }}
         >
-          <Icon name="chevron-right" size={14} />
+          <Icon name="chevron-left" size={14} />
           العودة إلى المشاريع
         </button>
         <div style={{
