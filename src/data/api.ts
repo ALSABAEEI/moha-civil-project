@@ -3,10 +3,11 @@
  * no component should import the Supabase client directly. This keeps RLS-aware
  * queries in one file and makes it easy to swap implementations later.
  */
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { formatDateArabic } from '@/lib/format';
 import type {
-  AppNotification, Expense, Payment, Person, Project, Task, Term, User, Vendor,
+  AppNotification, Expense, Payment, Person, Project, Role, Task, Term, User, Vendor,
 } from '@/types';
 
 function client() {
@@ -211,6 +212,67 @@ export async function deleteDiscipline(id: string): Promise<void> {
 export async function updateMyPassword(newPassword: string): Promise<void> {
   const { error } = await client().auth.updateUser({ password: newPassword });
   if (error) throw error;
+}
+
+/* =========================================================
+   Admin: create a new team member
+   ─────────────────────────────────────────────────────────
+   Uses a TRANSIENT supabase client (persistSession=false) for the signUp call
+   so the admin's session is not replaced. Then back on the main admin client,
+   updates the new user's profile fields and calls the admin_confirm_email RPC
+   so they can sign in immediately regardless of the project's email-confirm
+   setting.
+   ========================================================= */
+
+export interface NewTeamMemberInput {
+  email: string;
+  password: string;
+  displayName: string;
+  initials: string;
+  role: Role;
+  department?: string | null;
+  city?: string | null;
+}
+
+export async function createTeamMember(input: NewTeamMemberInput): Promise<string> {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) throw new Error('Supabase env vars missing');
+
+  // 1) signUp on a transient client (does not touch the admin session)
+  const transient = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const { data: signUpData, error: signUpError } = await transient.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      data: { display_name: input.displayName, initials: input.initials },
+    },
+  });
+  if (signUpError) throw signUpError;
+  const newId = signUpData.user?.id;
+  if (!newId) throw new Error('Sign-up did not return a user id');
+
+  // 2) As admin, update the public.users row that the trigger just created
+  //    (give it the real role, department, city, initials)
+  const { error: profileError } = await client()
+    .from('users')
+    .update({
+      display_name: input.displayName,
+      initials: input.initials,
+      role: input.role,
+      department: input.department ?? null,
+      city: input.city ?? null,
+    })
+    .eq('id', newId);
+  if (profileError) throw profileError;
+
+  // 3) As admin, mark the email confirmed so they can sign in straight away
+  const { error: confirmError } = await client().rpc('admin_confirm_email', { user_id: newId });
+  if (confirmError) throw confirmError;
+
+  return newId;
 }
 
 export async function listVendors(): Promise<Vendor[]> {
