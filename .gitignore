@@ -28,3 +28,8 @@ pnpm-debug.log*
 
 # TS build info
 *.tsbuildinfo
+
+# Original design-system source folder (sits beside the repo locally;
+# contents are already tracked under /design-system after the initial copy)
+ProTrack Design System/
+
