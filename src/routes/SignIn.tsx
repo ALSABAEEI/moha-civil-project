@@ -79,7 +79,6 @@ export function SignIn() {
               onChange={setPassword}
               autoComplete="current-password"
               disabled={submitting}
-              trailingLabel={<a style={{ color: 'var(--teal-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>نسيت؟</a>}
               endButton={{
                 icon: showPw ? 'eye-off' : 'lock',
                 onClick: () => setShowPw((v) => !v),
