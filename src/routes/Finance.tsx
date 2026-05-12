@@ -78,7 +78,7 @@ export function Finance() {
             <span className="num" style={{ fontWeight: 700, direction: 'ltr', textAlign: 'start' }}>{p.id}</span>
             <span style={{ color: 'var(--ink-700)' }}>{p.vendor}</span>
             <span className="num" style={{ color: 'var(--ink-600)', direction: 'ltr', textAlign: 'start' }}>{p.project}</span>
-            <span className="money" style={{ fontWeight: 700 }}>{SARw(p.amount)}</span>
+            <span className="money" dir="ltr" style={{ fontWeight: 700 }}>{SARw(p.amount)}</span>
             <span className="num" style={{ color: 'var(--ink-600)' }}>{p.due}</span>
             <PaymentChip status={p.status} />
           </div>
@@ -96,7 +96,7 @@ export function Finance() {
             <Icon name="circle-alert" size={18} style={{ color: 'var(--danger-700)', flexShrink: 0, marginTop: 2 }} />
             <div style={{ fontSize: 13, color: 'var(--ink-800)', lineHeight: 1.7 }}>
               <b style={{ color: 'var(--danger-700)' }}>تنبيه:</b> هناك فواتير متأخرة بإجمالي{' '}
-              <span className="money" style={{ fontWeight: 700, color: 'var(--danger-700)' }}>{SARw(totalOverdue)}</span>{' '}
+              <span className="money" dir="ltr" style={{ fontWeight: 700, color: 'var(--danger-700)' }}>{SARw(totalOverdue)}</span>{' '}
               تحتاج إلى متابعة عاجلة.
             </div>
           </div>

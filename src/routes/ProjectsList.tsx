@@ -155,8 +155,8 @@ export function ProjectsList() {
                 <Progress value={p.progress} status={p.status} height={6} />
               </div>
             </div>
-            <span className="money" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-900)' }}>{SARw(p.budget)}</span>
-            <span className="money" style={{ fontSize: 13, color: p.budget > 0 && p.spent / p.budget > 0.9 ? 'var(--danger-700)' : 'var(--ink-700)' }}>
+            <span className="money" dir="ltr" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-900)' }}>{SARw(p.budget)}</span>
+            <span className="money" dir="ltr" style={{ fontSize: 13, color: p.budget > 0 && p.spent / p.budget > 0.9 ? 'var(--danger-700)' : 'var(--ink-700)' }}>
               {SARw(p.spent)}
             </span>
             <AvatarStack ids={p.team} size={22} max={3} />

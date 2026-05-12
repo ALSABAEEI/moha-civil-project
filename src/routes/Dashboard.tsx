@@ -142,7 +142,7 @@ export function Dashboard() {
                   <Icon name="receipt" size={14} style={{ color: 'var(--ink-500)', marginTop: 3 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ color: 'var(--ink-800)' }}>
-                      <b>{e.name}</b> — <span className="money">{SARw(e.amount)}</span>
+                      <b>{e.name}</b> — <span className="money" dir="ltr">{SARw(e.amount)}</span>
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2 }}>
                       {project?.code || '—'} · {e.date}
@@ -202,7 +202,7 @@ export function Dashboard() {
               <span style={{ color: 'var(--ink-700)' }}>{e.type}</span>
               <span style={{ color: 'var(--ink-700)' }}>{project?.code || '—'}</span>
               <span className="num" style={{ color: 'var(--ink-600)' }}>{e.date}</span>
-              <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
+              <span className="money" dir="ltr" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
             </div>
           );
         })}

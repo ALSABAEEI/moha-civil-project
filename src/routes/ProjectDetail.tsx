@@ -342,8 +342,8 @@ function MiniStat({ label, value, sub }: { label: string; value: string; sub?: s
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
-      <span className="money" style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{value}</span>
-      {sub && <span className="money" style={{ fontSize: 11.5, color: 'var(--ink-600)' }}>{sub}</span>}
+      <span className="money" dir="ltr" style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{value}</span>
+      {sub && <span className="money" dir="ltr" style={{ fontSize: 11.5, color: 'var(--ink-600)' }}>{sub}</span>}
     </div>
   );
 }
@@ -436,7 +436,7 @@ function TermsTab({ projectId, terms, canEdit, reload }: {
               <div style={{ fontSize: 13.5, color: 'var(--ink-700)', lineHeight: 1.75 }}>{t.summary}</div>
               <div style={{ display: 'flex', gap: 18, marginTop: 10, fontSize: 12, color: 'var(--ink-600)' }}>
                 {t.amount != null && (
-                  <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(t.amount)}</span>
+                  <span className="money" dir="ltr" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(t.amount)}</span>
                 )}
                 {t.startDate && t.endDate && (
                   <span className="num">{t.startDate} → {t.endDate}</span>
@@ -627,7 +627,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)' }}>إجمالي المصروفات</span>
-              <span className="money" style={{ fontSize: 17, fontWeight: 800, color: 'var(--ink-900)' }}>{SARw(total)}</span>
+              <span className="money" dir="ltr" style={{ fontSize: 17, fontWeight: 800, color: 'var(--ink-900)' }}>{SARw(total)}</span>
             </div>
             {canEdit && <Button icon="plus" onClick={() => setCreating(true)}>إضافة مصروف</Button>}
           </div>
@@ -675,7 +675,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
               <span style={{ color: 'var(--ink-700)' }}>{vendor?.name || '—'}</span>
               <span className="num" style={{ color: 'var(--ink-600)' }}>{e.date}</span>
               <span style={{ color: 'var(--ink-700)' }}>{PAYMENT_METHODS[e.method]}</span>
-              <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
+              <span className="money" dir="ltr" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
               {canEdit ? (
                 <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-start' }}>
                   <button onClick={() => setEditing(e)} className="icon-btn" title="تحرير">
@@ -1254,7 +1254,7 @@ function FinanceTab({ payments, finance }: {
           }}>
             <span className="num" style={{ fontWeight: 700, direction: 'ltr', textAlign: 'start' }}>{p.id}</span>
             <span style={{ color: 'var(--ink-700)' }}>{p.vendor}</span>
-            <span className="money" style={{ fontWeight: 700 }}>{SARw(p.amount)}</span>
+            <span className="money" dir="ltr" style={{ fontWeight: 700 }}>{SARw(p.amount)}</span>
             <span className="num" style={{ color: 'var(--ink-600)' }}>{p.due}</span>
             <PaymentChip status={p.status} />
           </div>
@@ -1294,7 +1294,7 @@ function FinanceKpi({ label, value, sub, icon, color }: {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
-          <span className="money" style={{ fontSize: 18, fontWeight: 800, color: color || 'var(--ink-900)' }}>{value}</span>
+          <span className="money" dir="ltr" style={{ fontSize: 18, fontWeight: 800, color: color || 'var(--ink-900)' }}>{value}</span>
           {sub && <span className="num" style={{ fontSize: 11, color: 'var(--ink-500)' }}>{sub}</span>}
         </div>
       </div>
