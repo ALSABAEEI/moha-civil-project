@@ -605,20 +605,28 @@ textarea.input { min-height: 80px; resize: vertical; }
 }
 
 /* =========================================================
-   Mobile layout — sidebar drawer + responsive tables
+   Responsive layout
    ─────────────────────────────────────────────────────────
-   Breakpoints:
-     mobile  ≤ 768px → sidebar becomes drawer, tables become cards
-     compact ≤ 480px → single-col forms, role chip hides
+   Tiered breakpoints (each rule fires at the size where it
+   actually matters, not all bundled at 768):
+     ≤ 1024px → wide tables reflow to cards
+                (catches iPad portrait + iPad landscape +
+                 narrow laptop windows where 6-7-col grids overflow)
+     ≤ 900px  → KPI grids and overview-grid collapse,
+                project-stats-grid drops from 5 cols to 2
+     ≤ 768px  → sidebar becomes a drawer, topbar collapses,
+                tap targets grow, form padding tightens
+     ≤ 480px  → form modals 1-col, role chip hides,
+                tightest main padding (tiny phones)
    ========================================================= */
 
-/* Hamburger button: hidden on desktop, shown on mobile */
+/* Hamburger button: hidden on desktop, shown when sidebar becomes a drawer */
 .hamburger-btn { display: none; }
 
 /* Sidebar's close button (X inside the drawer): hidden on desktop */
 .sidebar-close-btn { display: none; }
 
-/* Sidebar drawer + backdrop scaffolding (only kicks in at ≤768px) */
+/* Sidebar drawer + backdrop scaffolding (only kicks in below the drawer breakpoint) */
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
@@ -633,12 +641,50 @@ textarea.input { min-height: 80px; resize: vertical; }
   pointer-events: auto;
 }
 
-/* The responsive-row class is harmless on desktop — it only changes
-   behaviour inside the media query below. The same applies to
-   responsive-table-head. */
+/* The .responsive-row and .responsive-table-head classes are harmless on
+   desktop. They only change behaviour inside the media query below. */
 
+/* ---------- ≤ 1024px (tablet portrait / narrow laptop) ---------- */
+@media (max-width: 1024px) {
+  /* Wide tables (6–7 cols) reflow into stacked card-style rows */
+  .responsive-table-head { display: none !important; }
+  .responsive-row {
+    grid-template-columns: 1fr !important;
+    grid-auto-flow: row !important;
+    row-gap: 6px !important;
+    padding: 14px 16px !important;
+  }
+  .responsive-row > * { min-width: 0; }
+}
+
+/* ---------- ≤ 900px (large phone landscape / small tablet) ---------- */
+@media (max-width: 900px) {
+  /* Project-detail header drops 5 cols → 2 cols, progress row spans full width */
+  .project-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+  .project-stats-grid > :first-child { grid-column: 1 / -1; }
+
+  /* Overview tab: 2fr 1fr → single column */
+  .overview-grid { grid-template-columns: 1fr !important; }
+
+  /* Timeline rows: 140px 1fr 100px → label + chip on top, bar full-width below */
+  .timeline-row {
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      'label  chip'
+      'bar    bar' !important;
+    gap: 6px 10px !important;
+  }
+  .timeline-row > :nth-child(1) { grid-area: label; }
+  .timeline-row > :nth-child(2) { grid-area: bar; }
+  .timeline-row > :nth-child(3) { grid-area: chip; }
+}
+
+/* ---------- ≤ 768px (phone / iPad portrait) ---------- */
 @media (max-width: 768px) {
-  /* ---- Top bar adjustments ---- */
+  /* Top bar: hamburger appears, search collapses to icon */
   .hamburger-btn { display: inline-flex; }
   .sidebar-close-btn { display: inline-flex; }
   .topbar { padding: 0 14px; gap: 10px; }
@@ -650,7 +696,7 @@ textarea.input { min-height: 80px; resize: vertical; }
   }
   .topbar-search-text { display: none; }
 
-  /* ---- Sidebar becomes a slide-in drawer ---- */
+  /* Sidebar becomes a slide-in drawer */
   .sidebar-drawer {
     position: fixed !important;
     top: 0;
@@ -663,64 +709,27 @@ textarea.input { min-height: 80px; resize: vertical; }
     z-index: 1200;
     box-shadow: -8px 0 24px rgba(0,0,0,0.25);
   }
-  .sidebar-drawer.is-open {
-    transform: translateX(0);
-  }
+  .sidebar-drawer.is-open { transform: translateX(0); }
 
-  /* ---- Main padding tightens ---- */
+  /* Main padding tightens */
   .app-main-scroll { padding: 14px 14px !important; }
 
-  /* ---- Responsive tables: hide header, reflow rows ---- */
-  .responsive-table-head { display: none !important; }
-  .responsive-row {
-    grid-template-columns: 1fr !important;
-    grid-auto-flow: row !important;
-    row-gap: 6px !important;
-    padding: 14px 16px !important;
-  }
-  .responsive-row > * {
-    min-width: 0;
-  }
-
-  /* ---- Larger tap targets on small icon buttons ---- */
+  /* Thumb-friendly tap targets */
   .icon-btn { width: 36px; height: 36px; }
   .dark-icon-btn { width: 36px; height: 36px; }
 
-  /* ---- Project detail header KPIs: 2-col grid ---- */
-  .project-stats-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 14px !important;
-  }
-  .project-stats-grid > :first-child {
-    grid-column: 1 / -1;
-  }
-
-  /* ---- Overview tab: 2fr 1fr → single column ---- */
-  .overview-grid { grid-template-columns: 1fr !important; }
-
-  /* ---- Timeline rows: 140px 1fr 100px → stack label + bar + chip ---- */
-  .timeline-row {
-    grid-template-columns: 1fr auto !important;
-    grid-template-areas:
-      'label  chip'
-      'bar    bar' !important;
-    gap: 6px 10px !important;
-  }
-  .timeline-row > :nth-child(1) { grid-area: label; }
-  .timeline-row > :nth-child(2) { grid-area: bar; }
-  .timeline-row > :nth-child(3) { grid-area: chip; }
-
-  /* Modal — fill viewport on small screens with comfy padding */
+  /* SweetAlert popups: fill width with margin */
   .swal2-popup { width: 92vw !important; }
 }
 
+/* ---------- ≤ 480px (small phone) ---------- */
 @media (max-width: 480px) {
   /* Form modals: 2-col → 1-col */
   .form-grid { grid-template-columns: 1fr !important; }
 
-  /* Role chip in topbar: hide */
+  /* Role chip in topbar: hide (low value, takes space) */
   .role-chip { display: none; }
 
-  /* Even tighter main padding */
+  /* Tightest main padding */
   .app-main-scroll { padding: 12px 10px !important; }
 }
