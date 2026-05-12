@@ -48,19 +48,7 @@ export function Sidebar() {
     return (
       <div
         onClick={() => navigate(item.to)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '9px 12px',
-          borderRadius: 8,
-          fontSize: 14,
-          fontWeight: active ? 700 : 500,
-          cursor: 'pointer',
-          background: active ? 'var(--teal-500)' : 'transparent',
-          color: active ? '#fff' : '#A9B6C7',
-          transition: 'background var(--dur-2) var(--ease-out)',
-        }}
+        className={active ? 'nav-item nav-item-active' : 'nav-item'}
       >
         <Icon name={item.icon} size={18} stroke={1.75} />
         <span style={{ flex: 1 }}>{item.label}</span>
@@ -133,15 +121,7 @@ export function Sidebar() {
         <button
           onClick={handleSignOut}
           title="تسجيل الخروج"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#7A8AA0',
-            cursor: 'pointer',
-            padding: 4,
-            display: 'inline-flex',
-            borderRadius: 6,
-          }}
+          className="dark-icon-btn"
         >
           <Icon name="log-out" size={16} />
         </button>

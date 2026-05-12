@@ -92,21 +92,7 @@ export function ProjectDetail() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              style={{
-                padding: '12px 14px',
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: tab === t.id ? '2px solid var(--teal-500)' : '2px solid transparent',
-                color: tab === t.id ? 'var(--navy-800)' : 'var(--ink-600)',
-                fontFamily: 'var(--font-sans)',
-                whiteSpace: 'nowrap',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
+              className={tab === t.id ? 'tab-btn tab-btn-active' : 'tab-btn'}
             >
               <Icon name={t.icon} size={14} />
               {t.label}
