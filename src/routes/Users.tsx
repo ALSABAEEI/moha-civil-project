@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { Modal } from '@/components/Modal';
 import { useAsync } from '@/hooks/useAsync';
 import { createTeamMember, listUsers, type NewTeamMemberInput } from '@/data/api';
+import { toast } from '@/lib/notify';
 import { useAppData } from '@/contexts/AppData';
 import { useAuth } from '@/stores/auth';
 import { ROLE_LABEL } from '@/lib/roles';
@@ -170,16 +171,16 @@ function UserFormModal({ open, onClose, onSaved }: {
         department: form.department || null,
         city: form.city || null,
       });
+      toast.success('تم إضافة العضو');
       await onSaved();
     } catch (e: any) {
       const m = e?.message || '';
-      if (/already registered|already exists|duplicate/i.test(m)) {
-        setErr('هذا البريد مسجَّل من قبل.');
-      } else if (/password/i.test(m)) {
-        setErr('كلمة مرور غير صالحة. اختر كلمة أقوى.');
-      } else {
-        setErr(m || 'تعذّر إنشاء العضو.');
-      }
+      let friendly: string;
+      if (/already registered|already exists|duplicate/i.test(m)) friendly = 'هذا البريد مسجَّل من قبل.';
+      else if (/password/i.test(m)) friendly = 'كلمة مرور غير صالحة. اختر كلمة أقوى.';
+      else friendly = m || 'تعذّر إنشاء العضو.';
+      setErr(friendly);
+      toast.error(friendly);
     } finally {
       setBusy(false);
     }

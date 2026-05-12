@@ -5,6 +5,7 @@ import { Icon } from '@/components/Icon';
 import { useAuth } from '@/stores/auth';
 import { useAppData } from '@/contexts/AppData';
 import { createDiscipline, deleteDiscipline, updateMyPassword } from '@/data/api';
+import { confirmDelete, toast } from '@/lib/notify';
 import { ROLE_LABEL } from '@/lib/roles';
 import { UsersManager } from '@/routes/Users';
 import type { User } from '@/types';
@@ -197,8 +198,11 @@ function PasswordSection() {
       await updateMyPassword(pw);
       setPw(''); setPw2('');
       setMsg({ kind: 'ok', text: 'تم تحديث كلمة المرور بنجاح. استخدمها في تسجيل الدخول التالي.' });
+      toast.success('تم تحديث كلمة المرور');
     } catch (err: any) {
-      setMsg({ kind: 'err', text: err?.message || 'تعذّر تحديث كلمة المرور.' });
+      const m = err?.message || 'تعذّر تحديث كلمة المرور.';
+      setMsg({ kind: 'err', text: m });
+      toast.error(m);
     } finally {
       setBusy(false);
     }
@@ -310,21 +314,31 @@ function DisciplinesSection() {
       await createDiscipline(trimmed, maxOrder + 10);
       setNewName('');
       await refresh();
+      toast.success('تم إضافة التخصص');
     } catch (e: any) {
-      setErr(e?.message || 'تعذّر إضافة التخصص.');
+      const m = e?.message || 'تعذّر إضافة التخصص.';
+      setErr(m);
+      toast.error(m);
     } finally {
       setBusy(false);
     }
   };
 
   const remove = async (id: string, name: string) => {
-    if (!confirm(`حذف التخصص "${name}"؟ المشاريع والموردون الذين يحملون هذا التخصص لن يتأثروا، لكنه لن يظهر في القوائم بعد ذلك.`)) return;
+    const ok = await confirmDelete({
+      title: `حذف التخصص "${name}"`,
+      text: 'المشاريع والموردون الذين يحملون هذا التخصص لن يتأثروا، لكنه لن يظهر في القوائم بعد ذلك.',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await deleteDiscipline(id);
       await refresh();
+      toast.success('تم حذف التخصص');
     } catch (e: any) {
-      setErr(e?.message || 'تعذّر حذف التخصص.');
+      const m = e?.message || 'تعذّر حذف التخصص.';
+      setErr(m);
+      toast.error(m);
     } finally {
       setBusy(false);
     }

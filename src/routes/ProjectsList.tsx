@@ -12,6 +12,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useAppData } from '@/contexts/AppData';
 import { createProject, listProjects, type NewProjectInput } from '@/data/api';
 import { SARw } from '@/lib/format';
+import { toast } from '@/lib/notify';
 import type { ProjectStatus } from '@/types';
 
 const STATUS_OPTIONS: { id: ProjectStatus | 'all'; label: string }[] = [
@@ -245,11 +246,17 @@ function ProjectFormModal({ open, onClose, onSaved }: {
         location: form.location || null,
         pmId: form.pmId!,
       });
+      toast.success('تم إنشاء المشروع');
       await onSaved();
     } catch (e: any) {
       const m = e?.message || '';
-      if (/duplicate|unique/i.test(m)) setErr('رمز المشروع مستخدم من قبل، اختر رمزًا آخر.');
-      else setErr(m || 'تعذّر إنشاء المشروع.');
+      if (/duplicate|unique/i.test(m)) {
+        setErr('رمز المشروع مستخدم من قبل، اختر رمزًا آخر.');
+        toast.error('رمز المشروع مستخدم من قبل');
+      } else {
+        setErr(m || 'تعذّر إنشاء المشروع.');
+        toast.error(m || 'تعذّر إنشاء المشروع');
+      }
     } finally {
       setBusy(false);
     }

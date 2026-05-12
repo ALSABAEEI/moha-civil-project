@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { useAppData } from '@/contexts/AppData';
 import { useAuth } from '@/stores/auth';
 import { createVendor, type NewVendorInput } from '@/data/api';
+import { toast } from '@/lib/notify';
 import type { Vendor } from '@/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -144,9 +145,11 @@ function VendorFormModal({ open, onClose, onSaved }: {
         contact: form.contact || null,
         notes: form.notes || null,
       });
+      toast.success('تم إضافة المورد');
       await onSaved();
     } catch (e: any) {
       setErr(e?.message || 'تعذّر إنشاء المورد.');
+      toast.error(e?.message || 'تعذّر إنشاء المورد');
     } finally {
       setBusy(false);
     }

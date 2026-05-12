@@ -16,6 +16,7 @@ import {
   type NewTaskInput,
 } from '@/data/api';
 import { SARw } from '@/lib/format';
+import { confirmDelete, toast } from '@/lib/notify';
 import { computeProjectFinance, EXPENSE_TYPES, PAYMENT_METHODS, TERM_STATUS_LABEL, TERM_TYPES } from '@/lib/finance';
 import type { Expense, Project, Task, Term } from '@/types';
 
@@ -446,9 +447,19 @@ function TermsTab({ projectId, terms, canEdit, reload }: {
               <div style={{ display: 'flex', gap: 6 }}>
                 <Button variant="ghost" size="sm" icon="edit-3" onClick={() => setEditing(t)}>تحرير</Button>
                 <Button variant="danger" size="sm" icon="trash-2" disabled={busy} onClick={async () => {
-                  if (!confirm(`حذف البند "${t.title}"؟`)) return;
+                  const ok = await confirmDelete({
+                    title: 'حذف البند',
+                    text: `هل تريد حذف البند "${t.title}"؟`,
+                  });
+                  if (!ok) return;
                   setBusy(true);
-                  try { await deleteTerm(t.id); await reload(); } finally { setBusy(false); }
+                  try {
+                    await deleteTerm(t.id);
+                    await reload();
+                    toast.success('تم حذف البند');
+                  } catch (e: any) {
+                    toast.error(e?.message || 'تعذّر الحذف');
+                  } finally { setBusy(false); }
                 }}>حذف</Button>
               </div>
             )}
@@ -469,9 +480,17 @@ function TermsTab({ projectId, terms, canEdit, reload }: {
         onSave={async (t) => {
           setBusy(true);
           try {
-            if (editing) await updateTerm(t);
-            else await createTerm({ ...t, project: projectId });
+            if (editing) {
+              await updateTerm(t);
+              toast.success('تم تحديث البند');
+            } else {
+              await createTerm({ ...t, project: projectId });
+              toast.success('تم إضافة البند');
+            }
             await reload();
+          } catch (e: any) {
+            toast.error(e?.message || 'تعذّر حفظ البند');
+            throw e;
           } finally {
             setBusy(false);
             setCreating(false);
@@ -663,9 +682,19 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
                     <Icon name="edit-3" size={14} />
                   </button>
                   <button disabled={busy} onClick={async () => {
-                    if (!confirm('حذف هذا المصروف؟ سيتم تحديث الملخص المالي تلقائيًا.')) return;
+                    const ok = await confirmDelete({
+                      title: 'حذف المصروف',
+                      text: 'سيتم تحديث الملخص المالي تلقائيًا.',
+                    });
+                    if (!ok) return;
                     setBusy(true);
-                    try { await deleteExpense(e.id); await reload(); } finally { setBusy(false); }
+                    try {
+                      await deleteExpense(e.id);
+                      await reload();
+                      toast.success('تم حذف المصروف');
+                    } catch (err: any) {
+                      toast.error(err?.message || 'تعذّر الحذف');
+                    } finally { setBusy(false); }
                   }} className="icon-btn icon-btn-danger" title="حذف">
                     <Icon name="trash-2" size={14} />
                   </button>
@@ -692,9 +721,17 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
         onSave={async (e) => {
           setBusy(true);
           try {
-            if (editing) await updateExpense(e);
-            else await createExpense(e);
+            if (editing) {
+              await updateExpense(e);
+              toast.success('تم تحديث المصروف');
+            } else {
+              await createExpense(e);
+              toast.success('تم إضافة المصروف');
+            }
             await reload();
+          } catch (err: any) {
+            toast.error(err?.message || 'تعذّر حفظ المصروف');
+            throw err;
           } finally {
             setBusy(false);
             setCreating(false);
@@ -893,9 +930,19 @@ function TasksTab({ tasks, projectId, projectCode, team, canEdit, reload }: {
               <button
                 disabled={busy}
                 onClick={async () => {
-                  if (!confirm(`حذف المهمة "${t.title}"؟`)) return;
+                  const ok = await confirmDelete({
+                    title: 'حذف المهمة',
+                    text: `هل تريد حذف المهمة "${t.title}"؟`,
+                  });
+                  if (!ok) return;
                   setBusy(true);
-                  try { await deleteTask(t.id); await reload(); } finally { setBusy(false); }
+                  try {
+                    await deleteTask(t.id);
+                    await reload();
+                    toast.success('تم حذف المهمة');
+                  } catch (err: any) {
+                    toast.error(err?.message || 'تعذّر الحذف');
+                  } finally { setBusy(false); }
                 }}
                 className="icon-btn icon-btn-danger"
                 style={{ justifySelf: 'start' }}
@@ -971,9 +1018,11 @@ function TaskFormModal({ open, onClose, projectId, projectCode, team, onSaved }:
         dueDate: form.dueDate || null,
         priority: form.priority || 'normal',
       });
+      toast.success('تم إضافة المهمة');
       await onSaved();
     } catch (e: any) {
       setErr(e?.message || 'تعذّر إنشاء المهمة.');
+      toast.error(e?.message || 'تعذّر إنشاء المهمة');
     } finally {
       setBusy(false);
     }
