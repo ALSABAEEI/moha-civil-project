@@ -1,0 +1,1072 @@
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Card } from '@/components/Card';
+import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
+import { StatusChip, Chip, PaymentChip } from '@/components/Chip';
+import { Progress } from '@/components/Progress';
+import { Avatar, AvatarStack } from '@/components/Avatar';
+import { Modal } from '@/components/Modal';
+import { useAuth } from '@/stores/auth';
+import {
+  ACTIVITY, EXPENSES, PAYMENTS, PEOPLE, PROJECTS, TASKS, TERMS, VENDORS,
+} from '@/data/mock';
+import { SARw } from '@/lib/format';
+import { computeProjectFinance, EXPENSE_TYPES, PAYMENT_METHODS, TERM_STATUS_LABEL, TERM_TYPES } from '@/lib/finance';
+import type { Expense, Term } from '@/types';
+
+type TabId = 'overview' | 'terms' | 'tasks' | 'vendors' | 'team' | 'expenses' | 'finance' | 'documents' | 'activity';
+
+const TABS: { id: TabId; label: string; icon: string }[] = [
+  { id: 'overview',  label: 'نظرة عامة',       icon: 'layout-dashboard' },
+  { id: 'terms',     label: 'بنود المشروع',     icon: 'list-checks' },
+  { id: 'tasks',     label: 'المهام',           icon: 'check-check' },
+  { id: 'vendors',   label: 'الموردون',         icon: 'truck' },
+  { id: 'team',      label: 'الفريق',           icon: 'users' },
+  { id: 'expenses',  label: 'مصروفات المشروع',  icon: 'receipt' },
+  { id: 'finance',   label: 'المتابعة المالية', icon: 'wallet' },
+  { id: 'documents', label: 'المستندات',        icon: 'file-text' },
+  { id: 'activity',  label: 'النشاطات',         icon: 'scroll-text' },
+];
+
+export function ProjectDetail() {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { role } = useAuth();
+
+  const project = PROJECTS.find((p) => p.id === projectId) || PROJECTS[0];
+  const [tab, setTab] = useState<TabId>('overview');
+
+  // Local state for expenses + terms so we can demonstrate live finance recalc on add/edit/delete.
+  // (In Supabase mode, this would be replaced by a query + mutation; the math stays the same.)
+  const [expenses, setExpenses] = useState<Expense[]>(EXPENSES);
+  const [terms, setTerms] = useState<Term[]>(TERMS);
+
+  const finance = useMemo(
+    () => computeProjectFinance(project, expenses, terms, PAYMENTS),
+    [project, expenses, terms],
+  );
+
+  const canEdit = role === 'admin' || role === 'pm' || role === 'finance';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <Header
+        project={project}
+        finance={finance}
+        onBack={() => navigate('/app/projects')}
+      />
+
+      <Card pad={0}>
+        <div style={{
+          display: 'flex',
+          gap: 4,
+          padding: '0 14px',
+          borderBottom: '1px solid var(--border-1)',
+          overflowX: 'auto',
+        }}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                padding: '12px 14px',
+                fontSize: 13.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: tab === t.id ? '2px solid var(--teal-500)' : '2px solid transparent',
+                color: tab === t.id ? 'var(--navy-800)' : 'var(--ink-600)',
+                fontFamily: 'var(--font-sans)',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Icon name={t.icon} size={14} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {tab === 'overview' && <OverviewTab project={project} finance={finance} />}
+      {tab === 'terms' && (
+        <TermsTab
+          projectId={project.id}
+          terms={terms.filter((t) => t.project === project.id)}
+          canEdit={canEdit}
+          onAdd={(t) => setTerms((cur) => [...cur, t])}
+          onUpdate={(t) => setTerms((cur) => cur.map((x) => (x.id === t.id ? t : x)))}
+          onDelete={(id) => setTerms((cur) => cur.filter((x) => x.id !== id))}
+          nextId={Math.max(0, ...terms.map((t) => t.id)) + 1}
+        />
+      )}
+      {tab === 'tasks' && <TasksTab projectId={project.id} />}
+      {tab === 'vendors' && <VendorsTab />}
+      {tab === 'team' && <TeamTab team={project.team} />}
+      {tab === 'expenses' && (
+        <ExpensesTab
+          projectId={project.id}
+          terms={terms.filter((t) => t.project === project.id)}
+          expenses={expenses.filter((e) => e.project === project.id)}
+          canEdit={canEdit}
+          onAdd={(e) => setExpenses((cur) => [...cur, e])}
+          onUpdate={(e) => setExpenses((cur) => cur.map((x) => (x.id === e.id ? e : x)))}
+          onDelete={(id) => setExpenses((cur) => cur.filter((x) => x.id !== id))}
+        />
+      )}
+      {tab === 'finance' && (
+        <FinanceTab
+          projectCode={project.code}
+          finance={finance}
+        />
+      )}
+      {tab === 'documents' && <DocumentsTab />}
+      {tab === 'activity' && <ActivityTab />}
+    </div>
+  );
+}
+
+/* =========================================================
+   Header — branding + live finance KPIs
+   ========================================================= */
+
+function Header({ project, finance, onBack }: {
+  project: typeof PROJECTS[number];
+  finance: ReturnType<typeof computeProjectFinance>;
+  onBack: () => void;
+}) {
+  return (
+    <Card pad={0}>
+      <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <button
+          onClick={onBack}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--ink-600)',
+            fontSize: 12,
+            padding: 0,
+            fontFamily: 'var(--font-sans)',
+            alignSelf: 'flex-start',
+          }}
+        >
+          <Icon name="chevron-right" size={14} />
+          العودة إلى المشاريع
+        </button>
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span className="num" style={{ fontSize: 12, color: 'var(--ink-500)' }}>{project.code}</span>
+              <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--ink-300)' }} />
+              <span style={{ fontSize: 12, color: 'var(--ink-500)' }}>{project.discipline}</span>
+              <StatusChip status={project.status} />
+              {finance.paymentStatus === 'over' && <Chip tone="blocked">تجاوز الميزانية</Chip>}
+              {finance.paymentStatus === 'tight' && <Chip tone="risk">قريب من الحد</Chip>}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink-900)' }}>{project.name}</div>
+            <div style={{
+              display: 'flex',
+              gap: 18,
+              fontSize: 13,
+              color: 'var(--ink-600)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="building-2" size={14} />{project.client}
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="map-pin" size={14} />{project.location}
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="calendar" size={14} />التسليم {project.due}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="secondary" icon="share-2">مشاركة</Button>
+            <Button icon="plus">مهمة جديدة</Button>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+          gap: 18,
+          paddingTop: 14,
+          borderTop: '1px solid var(--border-1)',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-500)' }}>تقدّم المشروع</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="num" style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink-900)' }}>{project.progress}٪</span>
+              <Progress value={project.progress} status={project.status} height={8} />
+            </div>
+          </div>
+          <Stat label="الميزانية" value={SARw(finance.budget)} />
+          <Stat label="إجمالي المصروفات" value={SARw(finance.expensesTotal)}
+            tone={finance.spendPercent > 90 ? 'danger' : null} />
+          <Stat label="المتبقي" value={SARw(finance.remaining)}
+            tone={finance.remaining < 0 ? 'danger' : 'success'} />
+          <Stat label="نسبة الصرف" value={`${finance.spendPercent.toFixed(1)}%`}
+            tone={finance.spendPercent > 90 ? 'danger' : finance.spendPercent > 70 ? 'warn' : null} />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: string; tone?: 'success' | 'danger' | 'warn' | null }) {
+  const color =
+    tone === 'success' ? 'var(--success-700)' :
+    tone === 'danger' ? 'var(--danger-700)' :
+    tone === 'warn' ? 'var(--warning-700)' :
+    'var(--ink-900)';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
+      <span className="money" style={{ fontSize: 16, fontWeight: 700, color }}>{value}</span>
+    </div>
+  );
+}
+
+/* =========================================================
+   Overview tab
+   ========================================================= */
+
+function OverviewTab({ project, finance }: {
+  project: typeof PROJECTS[number];
+  finance: ReturnType<typeof computeProjectFinance>;
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+      <Card>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--ink-900)' }}>
+          الجدول الزمني
+        </div>
+        <Timeline phases={[
+          { id: 'm1', label: 'التصميم والتراخيص',  start: 0,  end: 18,  status: 'completed' },
+          { id: 'm2', label: 'التجهيز والمباشرة',  start: 14, end: 32,  status: 'completed' },
+          { id: 'm3', label: 'الأعمال المدنية',    start: 28, end: 62,  status: 'progress' },
+          { id: 'm4', label: 'التركيب والتشغيل',   start: 58, end: 88,  status: 'todo' },
+          { id: 'm5', label: 'الاستلام النهائي',   start: 86, end: 100, status: 'todo' },
+        ]} />
+
+        <div style={{
+          marginTop: 22,
+          paddingTop: 18,
+          borderTop: '1px solid var(--border-1)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 14,
+        }}>
+          <MiniStat label="إجمالي البنود" value={SARw(finance.termsTotal)} />
+          <MiniStat label="المدفوع للموردين" value={SARw(finance.paid)} />
+          <MiniStat
+            label="آخر مصروف"
+            value={finance.lastExpense ? `${finance.lastExpense.date}` : '—'}
+            sub={finance.lastExpense ? SARw(finance.lastExpense.amount) : undefined}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--ink-900)' }}>
+          الفريق
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {project.team.map((id) => {
+            const person = PEOPLE.find((p) => p.id === id);
+            return (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Avatar person={id} size={36} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>{person?.role}</div>
+                </div>
+                <Icon name="more-horizontal" size={16} style={{ color: 'var(--ink-500)' }} />
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
+      <span className="money" style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{value}</span>
+      {sub && <span className="money" style={{ fontSize: 11.5, color: 'var(--ink-600)' }}>{sub}</span>}
+    </div>
+  );
+}
+
+function Timeline({ phases }: { phases: { id: string; label: string; start: number; end: number; status: 'completed' | 'progress' | 'todo' }[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {phases.map((ph) => (
+        <div key={ph.id} style={{
+          display: 'grid',
+          gridTemplateColumns: '140px 1fr 100px',
+          gap: 14,
+          alignItems: 'center',
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-800)' }}>{ph.label}</div>
+          <div style={{ position: 'relative', height: 18, background: 'var(--ink-100)', borderRadius: 999 }}>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: `${ph.start}%`,
+              width: `${ph.end - ph.start}%`,
+              background: ph.status === 'completed' ? 'var(--success-500)' :
+                ph.status === 'progress' ? 'var(--teal-500)' : 'var(--ink-300)',
+              borderRadius: 999,
+            }} />
+          </div>
+          <StatusChip status={ph.status} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* =========================================================
+   Terms tab (بنود المشروع)
+   ========================================================= */
+
+function TermsTab({ projectId, terms, canEdit, onAdd, onUpdate, onDelete, nextId }: {
+  projectId: string;
+  terms: Term[];
+  canEdit: boolean;
+  onAdd: (t: Term) => void;
+  onUpdate: (t: Term) => void;
+  onDelete: (id: number) => void;
+  nextId: number;
+}) {
+  const [editing, setEditing] = useState<Term | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  return (
+    <>
+      <Card pad={0}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>بنود المشروع</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
+              البنود التعاقدية والأعمال المُكوِّنة للمشروع.
+            </div>
+          </div>
+          {canEdit && <Button icon="plus" onClick={() => setCreating(true)}>إضافة بند</Button>}
+        </div>
+        {terms.map((t, i) => (
+          <div key={t.id} style={{
+            padding: '18px 20px',
+            borderBottom: i < terms.length - 1 ? '1px solid var(--border-1)' : 'none',
+            display: 'flex',
+            gap: 16,
+            alignItems: 'flex-start',
+          }}>
+            <div className="num" style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: 'var(--navy-050)',
+              color: 'var(--navy-700)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: 14,
+              flexShrink: 0,
+            }}>{t.id}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{t.title}</div>
+                <Chip tone="navy">{t.type}</Chip>
+                <Chip tone={t.status === 'done' ? 'completed' : t.status === 'in_progress' ? 'progress' : t.status === 'on_hold' ? 'blocked' : 'neutral'}>
+                  {TERM_STATUS_LABEL[t.status]}
+                </Chip>
+              </div>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-700)', lineHeight: 1.75 }}>{t.summary}</div>
+              <div style={{ display: 'flex', gap: 18, marginTop: 10, fontSize: 12, color: 'var(--ink-600)' }}>
+                {t.amount != null && (
+                  <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(t.amount)}</span>
+                )}
+                {t.startDate && t.endDate && (
+                  <span className="num">{t.startDate} → {t.endDate}</span>
+                )}
+              </div>
+            </div>
+            {canEdit && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Button variant="ghost" size="sm" icon="edit-3" onClick={() => setEditing(t)}>تحرير</Button>
+                <Button variant="danger" size="sm" icon="trash-2" onClick={() => {
+                  if (confirm(`حذف البند "${t.title}"؟`)) onDelete(t.id);
+                }}>حذف</Button>
+              </div>
+            )}
+          </div>
+        ))}
+        {terms.length === 0 && (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+            <Icon name="inbox" size={26} style={{ color: 'var(--ink-300)' }} />
+            <div style={{ marginTop: 10, fontSize: 13 }}>لا توجد بنود مُضافة بعد.</div>
+          </div>
+        )}
+      </Card>
+
+      <TermFormModal
+        open={creating || editing !== null}
+        onClose={() => { setCreating(false); setEditing(null); }}
+        initial={editing}
+        onSave={(t) => {
+          if (editing) onUpdate(t);
+          else onAdd({ ...t, id: nextId, project: projectId });
+          setCreating(false);
+          setEditing(null);
+        }}
+      />
+    </>
+  );
+}
+
+function TermFormModal({ open, onClose, initial, onSave }: {
+  open: boolean;
+  onClose: () => void;
+  initial: Term | null;
+  onSave: (t: Term) => void;
+}) {
+  const [form, setForm] = useState<Partial<Term>>({});
+
+  // Reset form whenever modal opens with a different term
+  useMemo(() => {
+    if (open) setForm(initial || { type: TERM_TYPES[0], status: 'planned' });
+  }, [open, initial]);
+
+  if (!open) return null;
+
+  const submit = () => {
+    if (!form.title || !form.summary) return;
+    onSave({
+      id: initial?.id ?? 0,
+      project: initial?.project ?? '',
+      title: form.title!,
+      type: form.type || TERM_TYPES[0],
+      amount: form.amount ? Number(form.amount) : undefined,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      status: (form.status as Term['status']) || 'planned',
+      summary: form.summary!,
+      notes: form.notes,
+    });
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={initial ? 'تحرير بند' : 'إضافة بند جديد'}
+      subtitle="أضف بنود العقد والأعمال المُكوِّنة للمشروع."
+      width={620}
+      footer={<>
+        <Button variant="secondary" onClick={onClose}>إلغاء</Button>
+        <Button onClick={submit} icon="save">حفظ البند</Button>
+      </>}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">اسم البند *</label>
+          <input className="input" value={form.title || ''}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="مثال: أعمال الكهرباء" />
+        </div>
+        <div>
+          <label className="field-label">نوع البند</label>
+          <select className="input" value={form.type || ''} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            {TERM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">القيمة (ر.س)</label>
+          <input className="input num" type="number" value={form.amount ?? ''} onChange={(e) => setForm({ ...form, amount: e.target.value === '' ? undefined : Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div>
+          <label className="field-label">تاريخ البداية</label>
+          <input className="input num" type="date" value={form.startDate || ''} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+        </div>
+        <div>
+          <label className="field-label">تاريخ النهاية</label>
+          <input className="input num" type="date" value={form.endDate || ''} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+        </div>
+        <div>
+          <label className="field-label">الحالة</label>
+          <select className="input" value={form.status || 'planned'} onChange={(e) => setForm({ ...form, status: e.target.value as Term['status'] })}>
+            {(['planned', 'in_progress', 'done', 'on_hold'] as Term['status'][]).map((s) =>
+              <option key={s} value={s}>{TERM_STATUS_LABEL[s]}</option>
+            )}
+          </select>
+        </div>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">وصف البند *</label>
+          <textarea className="input" rows={3} value={form.summary || ''}
+            onChange={(e) => setForm({ ...form, summary: e.target.value })}
+            placeholder="نطاق العمل وأبرز تفاصيل البند." />
+        </div>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">ملاحظات</label>
+          <input className="input" value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* =========================================================
+   Expenses tab (مصروفات المشروع) — priority module
+   ========================================================= */
+
+function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onDelete }: {
+  projectId: string;
+  terms: Term[];
+  expenses: Expense[];
+  canEdit: boolean;
+  onAdd: (e: Expense) => void;
+  onUpdate: (e: Expense) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [editing, setEditing] = useState<Expense | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+
+  return (
+    <>
+      <Card pad={0}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>مصروفات المشروع</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
+              المصروفات الفعلية المُسجَّلة على هذا المشروع — الحساب المالي يُحدَّث تلقائيًا عند الإضافة أو التعديل أو الحذف.
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)' }}>إجمالي المصروفات</span>
+              <span className="money" style={{ fontSize: 17, fontWeight: 800, color: 'var(--ink-900)' }}>{SARw(total)}</span>
+            </div>
+            {canEdit && <Button icon="plus" onClick={() => setCreating(true)}>إضافة مصروف</Button>}
+          </div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1.6fr 1fr 1fr 110px 1fr 1fr 90px',
+          padding: '10px 20px',
+          background: 'var(--ink-050)',
+          borderBottom: '1px solid var(--border-2)',
+          fontSize: 11,
+          fontWeight: 700,
+          color: 'var(--ink-500)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+        }}>
+          <span>الوصف</span>
+          <span>النوع</span>
+          <span>المورد</span>
+          <span>التاريخ</span>
+          <span>طريقة الدفع</span>
+          <span style={{ textAlign: 'start' }}>المبلغ</span>
+          <span></span>
+        </div>
+        {expenses.map((e, i) => {
+          const vendor = VENDORS.find((v) => v.id === e.vendor);
+          return (
+            <div key={e.id} style={{
+              display: 'grid',
+              gridTemplateColumns: '1.6fr 1fr 1fr 110px 1fr 1fr 90px',
+              padding: '12px 20px',
+              borderBottom: i < expenses.length - 1 ? '1px solid var(--border-1)' : 'none',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+            }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: 'var(--ink-900)' }}>{e.name}</div>
+                <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2, direction: 'ltr', textAlign: 'start' }}>
+                  {e.id}{e.invoiceNo ? ` · ${e.invoiceNo}` : ''}
+                </div>
+              </div>
+              <Chip tone="navy" dot={false}>{e.type}</Chip>
+              <span style={{ color: 'var(--ink-700)' }}>{vendor?.name || '—'}</span>
+              <span className="num" style={{ color: 'var(--ink-600)' }}>{e.date}</span>
+              <span style={{ color: 'var(--ink-700)' }}>{PAYMENT_METHODS[e.method]}</span>
+              <span className="money" style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{SARw(e.amount)}</span>
+              {canEdit ? (
+                <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-start' }}>
+                  <button onClick={() => setEditing(e)} style={iconBtn()} title="تحرير">
+                    <Icon name="edit-3" size={14} />
+                  </button>
+                  <button onClick={() => { if (confirm('حذف هذا المصروف؟ سيتم تحديث الملخص المالي تلقائيًا.')) onDelete(e.id); }} style={iconBtn('var(--danger-700)')} title="حذف">
+                    <Icon name="trash-2" size={14} />
+                  </button>
+                </div>
+              ) : <span />}
+            </div>
+          );
+        })}
+        {expenses.length === 0 && (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+            <Icon name="receipt" size={26} style={{ color: 'var(--ink-300)' }} />
+            <div style={{ marginTop: 10, fontSize: 13 }}>لم تُسجَّل أي مصروفات بعد.</div>
+          </div>
+        )}
+      </Card>
+
+      <ExpenseFormModal
+        open={creating || editing !== null}
+        onClose={() => { setCreating(false); setEditing(null); }}
+        initial={editing}
+        projectId={projectId}
+        terms={terms}
+        onSave={(e) => {
+          if (editing) onUpdate(e);
+          else onAdd(e);
+          setCreating(false);
+          setEditing(null);
+        }}
+      />
+    </>
+  );
+}
+
+function iconBtn(color = 'var(--ink-600)'): React.CSSProperties {
+  return {
+    background: 'transparent',
+    border: '1px solid var(--border-2)',
+    color,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+}
+
+function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: {
+  open: boolean;
+  onClose: () => void;
+  initial: Expense | null;
+  projectId: string;
+  terms: Term[];
+  onSave: (e: Expense) => void;
+}) {
+  const [form, setForm] = useState<Partial<Expense>>({});
+
+  useMemo(() => {
+    if (open) {
+      setForm(initial || {
+        type: EXPENSE_TYPES[0],
+        method: 'bank_transfer',
+        date: new Date().toISOString().slice(0, 10),
+        amount: 0,
+      });
+    }
+  }, [open, initial]);
+
+  if (!open) return null;
+
+  const submit = () => {
+    if (!form.name || !form.amount || !form.date) return;
+    const newId = initial?.id ?? `EXP-${Date.now().toString().slice(-6)}`;
+    onSave({
+      id: newId,
+      project: projectId,
+      name: form.name!,
+      type: form.type || EXPENSE_TYPES[0],
+      amount: Number(form.amount),
+      date: form.date!,
+      vendor: form.vendor || null,
+      term: form.term ?? null,
+      method: (form.method as Expense['method']) || 'bank_transfer',
+      invoiceNo: form.invoiceNo,
+      attachment: form.attachment || null,
+      notes: form.notes,
+    });
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={initial ? 'تحرير المصروف' : 'إضافة مصروف جديد'}
+      subtitle="سيتم تحديث ملخص المشروع المالي تلقائيًا عند الحفظ."
+      width={680}
+      footer={<>
+        <Button variant="secondary" onClick={onClose}>إلغاء</Button>
+        <Button onClick={submit} icon="save">حفظ المصروف</Button>
+      </>}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">اسم المصروف *</label>
+          <input className="input" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: توريد كوابل 25مم" />
+        </div>
+        <div>
+          <label className="field-label">نوع المصروف</label>
+          <select className="input" value={form.type || ''} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            {EXPENSE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">المبلغ (ر.س) *</label>
+          <input className="input num" type="number" min={0} value={form.amount ?? ''} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div>
+          <label className="field-label">التاريخ *</label>
+          <input className="input num" type="date" value={form.date || ''} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        </div>
+        <div>
+          <label className="field-label">طريقة الدفع</label>
+          <select className="input" value={form.method || 'bank_transfer'} onChange={(e) => setForm({ ...form, method: e.target.value as Expense['method'] })}>
+            {Object.entries(PAYMENT_METHODS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">المورد (اختياري)</label>
+          <select className="input" value={form.vendor || ''} onChange={(e) => setForm({ ...form, vendor: e.target.value || null })}>
+            <option value="">— بدون مورد —</option>
+            {VENDORS.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">البند المرتبط (اختياري)</label>
+          <select className="input" value={form.term ?? ''} onChange={(e) => setForm({ ...form, term: e.target.value === '' ? null : Number(e.target.value) })}>
+            <option value="">— بدون بند —</option>
+            {terms.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">رقم الفاتورة (اختياري)</label>
+          <input className="input num" value={form.invoiceNo || ''} onChange={(e) => setForm({ ...form, invoiceNo: e.target.value })} placeholder="INV-XXXX" />
+        </div>
+        <div>
+          <label className="field-label">مرفق / صورة الفاتورة</label>
+          <div style={{
+            border: '1px dashed var(--border-2)',
+            borderRadius: 8,
+            padding: '10px 12px',
+            background: 'var(--ink-050)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12.5,
+            color: 'var(--ink-600)',
+            cursor: 'pointer',
+          }}>
+            <Icon name="paperclip" size={14} />
+            <span>اسحب صورة الفاتورة أو اضغط للاختيار</span>
+          </div>
+        </div>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">ملاحظات</label>
+          <textarea className="input" rows={2} value={form.notes || ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* =========================================================
+   Tasks / Vendors / Team / Finance / Documents / Activity
+   ========================================================= */
+
+function TasksTab({ projectId }: { projectId: string }) {
+  const tasks = TASKS.filter((t) => t.project === projectId);
+  if (tasks.length === 0) return (
+    <Card>
+      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+        <Icon name="check-check" size={26} style={{ color: 'var(--ink-300)' }} />
+        <div style={{ marginTop: 10, fontSize: 13 }}>لا توجد مهام مرتبطة بهذا المشروع.</div>
+      </div>
+    </Card>
+  );
+  return (
+    <Card pad={0}>
+      {tasks.map((t, i) => (
+        <div key={t.id} style={{
+          display: 'grid',
+          gridTemplateColumns: '24px 1fr 130px 110px 36px',
+          gap: 14,
+          alignItems: 'center',
+          padding: '14px 20px',
+          borderBottom: i < tasks.length - 1 ? '1px solid var(--border-1)' : 'none',
+        }}>
+          <input type="checkbox" defaultChecked={t.status === 'done'}
+            style={{ width: 16, height: 16, accentColor: 'var(--teal-500)' }} />
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink-900)' }}>{t.title}</div>
+            <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 3, direction: 'ltr', textAlign: 'start' }}>{t.code}</div>
+          </div>
+          <StatusChip status={t.status} />
+          <span style={{ fontSize: 12, color: t.priority === 'high' ? 'var(--danger-700)' : 'var(--ink-600)' }}>{t.due}</span>
+          <Avatar person={t.assignee} size={26} />
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function VendorsTab() {
+  return (
+    <Card pad={0}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
+        padding: '10px 20px',
+        background: 'var(--ink-050)',
+        borderBottom: '1px solid var(--border-2)',
+        fontSize: 11,
+        fontWeight: 700,
+        color: 'var(--ink-500)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+      }}>
+        <span>المورد</span>
+        <span>التخصص</span>
+        <span>الحالة</span>
+        <span>التواصل</span>
+        <span style={{ textAlign: 'start' }}>المشاريع</span>
+      </div>
+      {VENDORS.map((v, i) => (
+        <div key={v.id} style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
+          padding: '14px 20px',
+          borderBottom: i < VENDORS.length - 1 ? '1px solid var(--border-1)' : 'none',
+          alignItems: 'center',
+          fontSize: 13,
+        }}>
+          <div style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{v.name}</div>
+          <span style={{ color: 'var(--ink-700)' }}>{v.discipline}</span>
+          <Chip tone={v.status === 'active' ? 'completed' : v.status === 'awaiting' ? 'review' : v.status === 'prequalified' ? 'navy' : 'blocked'}>
+            {v.status === 'active' ? 'نشط' : v.status === 'awaiting' ? 'بانتظار التأهيل' : v.status === 'prequalified' ? 'مؤهَّل مسبقًا' : 'موقوف'}
+          </Chip>
+          <span className="num" style={{ color: 'var(--ink-700)', direction: 'ltr', textAlign: 'start' }}>{v.contact}</span>
+          <span className="num" style={{ fontWeight: 700 }}>{v.projects}</span>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function TeamTab({ team }: { team: string[] }) {
+  return (
+    <Card pad={0}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>الفريق والمهندسون</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
+            صلاحياتهم الأساسية تأتي من دورهم العام، يمكن تجاوزها لهذا المشروع.
+          </div>
+        </div>
+        <Button icon="user-plus">إضافة عضو</Button>
+      </div>
+      {team.map((id, i) => {
+        const person = PEOPLE.find((p) => p.id === id);
+        return (
+          <div key={id} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '14px 20px',
+            borderBottom: i < team.length - 1 ? '1px solid var(--border-1)' : 'none',
+          }}>
+            <Avatar person={id} size={36} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>{person?.role} · {person?.city}</div>
+            </div>
+            <Icon name="more-horizontal" size={16} style={{ color: 'var(--ink-500)' }} />
+          </div>
+        );
+      })}
+    </Card>
+  );
+}
+
+function FinanceTab({ projectCode, finance }: {
+  projectCode: string;
+  finance: ReturnType<typeof computeProjectFinance>;
+}) {
+  const projectPayments = PAYMENTS.filter((p) => p.project === projectCode);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 14,
+      }}>
+        <FinanceKpi label="ميزانية المشروع" value={SARw(finance.budget)} icon="wallet" />
+        <FinanceKpi label="إجمالي البنود" value={SARw(finance.termsTotal)} icon="list-checks" />
+        <FinanceKpi label="إجمالي المصروفات" value={SARw(finance.expensesTotal)} icon="receipt"
+          color={finance.spendPercent > 90 ? 'var(--danger-700)' : undefined} />
+        <FinanceKpi label="المدفوع للموردين" value={SARw(finance.paid)} icon="check-check" color="var(--success-700)" />
+        <FinanceKpi label="المتبقي" value={SARw(finance.remaining)} icon="circle-dollar-sign"
+          color={finance.remaining < 0 ? 'var(--danger-700)' : 'var(--success-700)'} />
+        <FinanceKpi label="نسبة الصرف" value={`${finance.spendPercent.toFixed(1)}%`} icon="trending-up"
+          color={finance.spendPercent > 90 ? 'var(--danger-700)' : finance.spendPercent > 70 ? 'var(--warning-700)' : undefined} />
+        <FinanceKpi label="الفرق (ميزانية − صرف)" value={SARw(finance.difference)} icon="badge-check"
+          color={finance.difference < 0 ? 'var(--danger-700)' : 'var(--ink-900)'} />
+        <FinanceKpi
+          label="آخر مصروف"
+          value={finance.lastExpense ? SARw(finance.lastExpense.amount) : '—'}
+          sub={finance.lastExpense?.date}
+          icon="clock"
+        />
+      </div>
+
+      <Card pad={0}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>الفواتير</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>المدفوعات والمستحقات للمشروع.</div>
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 2fr 1fr 1fr 130px',
+          padding: '10px 20px',
+          background: 'var(--ink-050)',
+          borderBottom: '1px solid var(--border-2)',
+          fontSize: 11,
+          fontWeight: 700,
+          color: 'var(--ink-500)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+        }}>
+          <span>رقم الفاتورة</span>
+          <span>المورد</span>
+          <span style={{ textAlign: 'start' }}>المبلغ</span>
+          <span>الاستحقاق</span>
+          <span>الحالة</span>
+        </div>
+        {projectPayments.map((p, i) => (
+          <div key={p.id} style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 2fr 1fr 1fr 130px',
+            padding: '14px 20px',
+            borderBottom: i < projectPayments.length - 1 ? '1px solid var(--border-1)' : 'none',
+            alignItems: 'center',
+            fontSize: 13,
+          }}>
+            <span className="num" style={{ fontWeight: 700, direction: 'ltr', textAlign: 'start' }}>{p.id}</span>
+            <span style={{ color: 'var(--ink-700)' }}>{p.vendor}</span>
+            <span className="money" style={{ fontWeight: 700 }}>{SARw(p.amount)}</span>
+            <span className="num" style={{ color: 'var(--ink-600)' }}>{p.due}</span>
+            <PaymentChip status={p.status} />
+          </div>
+        ))}
+        {projectPayments.length === 0 && (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>
+            لا توجد فواتير مسجَّلة على هذا المشروع بعد.
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function FinanceKpi({ label, value, sub, icon, color }: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: string;
+  color?: string;
+}) {
+  return (
+    <Card pad={16}>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: 'var(--navy-050)',
+          color: 'var(--navy-700)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Icon name={icon} size={18} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ink-500)' }}>{label}</span>
+          <span className="money" style={{ fontSize: 18, fontWeight: 800, color: color || 'var(--ink-900)' }}>{value}</span>
+          {sub && <span className="num" style={{ fontSize: 11, color: 'var(--ink-500)' }}>{sub}</span>}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function DocumentsTab() {
+  return (
+    <Card>
+      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+        <Icon name="file-text" size={26} style={{ color: 'var(--ink-300)' }} />
+        <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-700)', fontWeight: 700 }}>المستندات</div>
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          ارفع العقود، المخططات، تقارير الفحص، وتراخيص العمل هنا. يتم ربط رفع الملفات بـ Supabase Storage لاحقًا.
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <Button icon="paperclip">رفع مستند</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function ActivityTab() {
+  return (
+    <Card>
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--ink-900)' }}>
+        سجل النشاطات
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {ACTIVITY.map((a, i) => {
+          const person = PEOPLE.find((p) => p.id === a.actor);
+          return (
+            <div key={i} style={{ display: 'flex', gap: 12 }}>
+              <Avatar person={a.actor} size={32} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-800)' }}>
+                  <b style={{ color: 'var(--ink-900)' }}>{person?.name}</b>{' '}
+                  <span style={{ color: 'var(--ink-600)' }}>{a.verb}</span>{' '}
+                  <span>{a.target}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--ink-500)', marginTop: 2 }}>{a.when}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
