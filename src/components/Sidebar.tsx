@@ -68,7 +68,7 @@ export function Sidebar() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try { await signOut(); } catch { /* signOut already swallows; this is belt-and-braces */ }
     navigate('/signin', { replace: true });
   };
 

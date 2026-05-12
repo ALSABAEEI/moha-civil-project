@@ -67,7 +67,14 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
-    if (supabase) await supabase.auth.signOut();
+    // Use scope: 'local' to clear the session immediately without waiting
+    // on a server round-trip — the server-side token will expire on its own.
+    // We also catch any error so local state is always cleared.
+    try {
+      if (supabase) await supabase.auth.signOut({ scope: 'local' });
+    } catch (err) {
+      console.warn('supabase.auth.signOut failed (clearing local state anyway):', err);
+    }
     set({ signedIn: false, role: null, personId: null, profile: null });
   },
 
