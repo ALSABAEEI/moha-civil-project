@@ -181,6 +181,30 @@ export async function listVendors(): Promise<Vendor[]> {
   return (vendors || []).map((v) => ({ ...mapVendor(v), projects: counts.get(v.id) || 0 }));
 }
 
+export interface NewVendorInput {
+  name: string;
+  discipline: string;
+  status: Vendor['status'];
+  contact?: string | null;
+  notes?: string | null;
+}
+
+export async function createVendor(input: NewVendorInput): Promise<Vendor> {
+  const { data, error } = await client()
+    .from('vendors')
+    .insert({
+      name: input.name,
+      discipline: input.discipline,
+      status: input.status,
+      contact: input.contact || null,
+      notes: input.notes || null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return { ...mapVendor(data), projects: 0 };
+}
+
 /* =========================================================
    Projects (RLS does role-based filtering server-side)
    ========================================================= */
@@ -220,6 +244,55 @@ export async function getProject(id: string): Promise<Project | null> {
   const teamIds = (teamRes.data || []).map((t) => t.user_id);
   const spent = (expensesRes.data || []).reduce((s, e) => s + Number(e.amount), 0);
   return mapProject(projRes.data, teamIds, spent);
+}
+
+export interface NewProjectInput {
+  code: string;
+  name: string;
+  discipline: string;
+  status: Project['status'];
+  progress: number;
+  budget: number;
+  dueDate?: string | null;
+  client?: string | null;
+  location?: string | null;
+  team: string[];
+}
+
+export async function createProject(input: NewProjectInput): Promise<Project> {
+  const { data: { user } } = await client().auth.getUser();
+  const myId = user?.id ?? null;
+
+  const { data: row, error } = await client()
+    .from('projects')
+    .insert({
+      code: input.code,
+      name: input.name,
+      discipline: input.discipline,
+      status: input.status,
+      progress: input.progress,
+      budget: input.budget,
+      due_date: input.dueDate || null,
+      pm_id: myId,
+      client: input.client || null,
+      location: input.location || null,
+      created_by: myId,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+
+  // Insert project_team rows (deduplicated). PM is added automatically.
+  const teamSet = new Set(input.team);
+  if (myId) teamSet.add(myId);
+  const team = Array.from(teamSet);
+  if (team.length > 0) {
+    const rows = team.map((uid) => ({ project_id: row.id, user_id: uid }));
+    const { error: teamError } = await client().from('project_team').insert(rows);
+    if (teamError) throw teamError;
+  }
+
+  return mapProject(row, team, 0);
 }
 
 /* =========================================================
@@ -352,6 +425,51 @@ export async function listTasks(projectId?: string): Promise<Task[]> {
   const { data, error } = await q;
   if (error) throw error;
   return (data || []).map(mapTask);
+}
+
+export interface NewTaskInput {
+  projectId: string;
+  code: string;
+  title: string;
+  status: Task['status'];
+  assigneeId?: string | null;
+  dueDate?: string | null;
+  priority: 'normal' | 'high';
+}
+
+export async function createTask(input: NewTaskInput): Promise<Task> {
+  const { data: { user } } = await client().auth.getUser();
+  const { data, error } = await client()
+    .from('tasks')
+    .insert({
+      project_id: input.projectId,
+      code: input.code,
+      title: input.title,
+      status: input.status,
+      assignee_id: input.assigneeId || null,
+      due_date: input.dueDate || null,
+      priority: input.priority,
+      created_by: user?.id ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return mapTask(data);
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  const { error } = await client().from('tasks').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/** Count tasks for a project to auto-generate the next "T-NN" code. */
+export async function countProjectTasks(projectId: string): Promise<number> {
+  const { count, error } = await client()
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', projectId);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 /* =========================================================

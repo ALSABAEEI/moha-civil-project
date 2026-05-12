@@ -11,12 +11,13 @@ import { useAuth } from '@/stores/auth';
 import { useAsync } from '@/hooks/useAsync';
 import { useAppData } from '@/contexts/AppData';
 import {
-  createExpense, createTerm, deleteExpense, deleteTerm,
+  countProjectTasks, createExpense, createTask, createTerm, deleteExpense, deleteTask, deleteTerm,
   getProject, listExpenses, listPayments, listTasks, listTerms, updateExpense, updateTerm,
+  type NewTaskInput,
 } from '@/data/api';
 import { SARw } from '@/lib/format';
 import { computeProjectFinance, EXPENSE_TYPES, PAYMENT_METHODS, TERM_STATUS_LABEL, TERM_TYPES } from '@/lib/finance';
-import type { Expense, Project, Term } from '@/types';
+import type { Expense, Project, Task, Term } from '@/types';
 
 type TabId = 'overview' | 'terms' | 'tasks' | 'vendors' | 'team' | 'expenses' | 'finance' | 'documents' | 'activity';
 
@@ -123,7 +124,16 @@ export function ProjectDetail() {
           reload={async () => { await termsQ.refetch(); await refetchAll(); }}
         />
       )}
-      {tab === 'tasks' && <TasksTab tasks={tasks} />}
+      {tab === 'tasks' && (
+        <TasksTab
+          tasks={tasks}
+          projectId={project.id}
+          projectCode={project.code}
+          team={project.team}
+          canEdit={canEdit}
+          reload={() => tasksQ.refetch()}
+        />
+      )}
       {tab === 'vendors' && <VendorsTab />}
       {tab === 'team' && <TeamTab team={project.team} />}
       {tab === 'expenses' && (
@@ -856,38 +866,234 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave, bu
    Other tabs (Tasks / Vendors / Team / Finance / Documents / Activity)
    ========================================================= */
 
-function TasksTab({ tasks }: { tasks: import('@/types').Task[] }) {
-  if (tasks.length === 0) return (
-    <Card>
-      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
-        <Icon name="check-check" size={26} style={{ color: 'var(--ink-300)' }} />
-        <div style={{ marginTop: 10, fontSize: 13 }}>لا توجد مهام مرتبطة بهذا المشروع.</div>
-      </div>
-    </Card>
-  );
+function TasksTab({ tasks, projectId, projectCode, team, canEdit, reload }: {
+  tasks: Task[];
+  projectId: string;
+  projectCode: string;
+  team: string[];
+  canEdit: boolean;
+  reload: () => void | Promise<void>;
+}) {
+  const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
+
   return (
-    <Card pad={0}>
-      {tasks.map((t, i) => (
-        <div key={t.id} style={{
-          display: 'grid',
-          gridTemplateColumns: '24px 1fr 130px 110px 36px',
-          gap: 14,
-          alignItems: 'center',
+    <>
+      <Card pad={0}>
+        <div style={{
           padding: '14px 20px',
-          borderBottom: i < tasks.length - 1 ? '1px solid var(--border-1)' : 'none',
+          borderBottom: '1px solid var(--border-1)',
+          display: 'flex',
+          alignItems: 'center',
         }}>
-          <input type="checkbox" defaultChecked={t.status === 'done'}
-            style={{ width: 16, height: 16, accentColor: 'var(--teal-500)' }} />
-          <div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink-900)' }}>{t.title}</div>
-            <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 3, direction: 'ltr', textAlign: 'start' }}>{t.code}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>المهام</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
+              المهام المرتبطة بهذا المشروع وحالتها الحالية.
+            </div>
           </div>
-          <StatusChip status={t.status} />
-          <span style={{ fontSize: 12, color: t.priority === 'high' ? 'var(--danger-700)' : 'var(--ink-600)' }}>{t.due}</span>
-          <Avatar person={t.assignee} size={26} />
+          {canEdit && <Button icon="plus" onClick={() => setCreating(true)}>مهمة جديدة</Button>}
         </div>
-      ))}
-    </Card>
+        {tasks.length === 0 && (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+            <Icon name="check-check" size={26} style={{ color: 'var(--ink-300)' }} />
+            <div style={{ marginTop: 10, fontSize: 13 }}>لا توجد مهام مرتبطة بهذا المشروع.</div>
+          </div>
+        )}
+        {tasks.map((t, i) => (
+          <div key={t.id} style={{
+            display: 'grid',
+            gridTemplateColumns: '24px 1fr 130px 110px 36px 60px',
+            gap: 14,
+            alignItems: 'center',
+            padding: '14px 20px',
+            borderBottom: i < tasks.length - 1 ? '1px solid var(--border-1)' : 'none',
+          }}>
+            <input type="checkbox" defaultChecked={t.status === 'done'}
+              style={{ width: 16, height: 16, accentColor: 'var(--teal-500)' }} />
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink-900)' }}>{t.title}</div>
+              <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 3, direction: 'ltr', textAlign: 'start' }}>{t.code}</div>
+            </div>
+            <StatusChip status={t.status} />
+            <span style={{ fontSize: 12, color: t.priority === 'high' ? 'var(--danger-700)' : 'var(--ink-600)' }}>{t.due}</span>
+            <Avatar person={t.assignee} size={26} />
+            {canEdit ? (
+              <button
+                disabled={busy}
+                onClick={async () => {
+                  if (!confirm(`حذف المهمة "${t.title}"؟`)) return;
+                  setBusy(true);
+                  try { await deleteTask(t.id); await reload(); } finally { setBusy(false); }
+                }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--border-2)',
+                  color: 'var(--danger-700)',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  justifySelf: 'start',
+                }}
+                title="حذف"
+              >
+                <Icon name="trash-2" size={14} />
+              </button>
+            ) : <span />}
+          </div>
+        ))}
+      </Card>
+
+      <TaskFormModal
+        open={creating}
+        onClose={() => setCreating(false)}
+        projectId={projectId}
+        projectCode={projectCode}
+        team={team}
+        onSaved={async () => { setCreating(false); await reload(); }}
+      />
+    </>
+  );
+}
+
+function TaskFormModal({ open, onClose, projectId, projectCode, team, onSaved }: {
+  open: boolean;
+  onClose: () => void;
+  projectId: string;
+  projectCode: string;
+  team: string[];
+  onSaved: () => void | Promise<void>;
+}) {
+  const { people } = useAppData();
+  const teamMembers = useMemo(() => people.filter((p) => team.includes(p.id)), [people, team]);
+  const [form, setForm] = useState<Partial<NewTaskInput>>({});
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useMemo(() => {
+    if (open) {
+      // Suggest next task code: e.g. "CIV-2026-014 · T-XX"
+      countProjectTasks(projectId).then((n) => {
+        const num = String(n + 1).padStart(2, '0');
+        setForm({
+          status: 'todo',
+          priority: 'normal',
+          code: `${projectCode} · T-${num}`,
+          dueDate: '',
+          assigneeId: teamMembers[0]?.id || null,
+        });
+      });
+      setErr(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, projectId, projectCode]);
+
+  if (!open) return null;
+
+  const submit = async () => {
+    setErr(null);
+    if (!form.title) {
+      setErr('عنوان المهمة حقل إلزامي.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await createTask({
+        projectId,
+        code: form.code || `${projectCode} · T-01`,
+        title: form.title!,
+        status: form.status || 'todo',
+        assigneeId: form.assigneeId || null,
+        dueDate: form.dueDate || null,
+        priority: form.priority || 'normal',
+      });
+      await onSaved();
+    } catch (e: any) {
+      setErr(e?.message || 'تعذّر إنشاء المهمة.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="مهمة جديدة"
+      subtitle="أضف مهمة إلى هذا المشروع وعيّن لها مسؤولًا."
+      width={620}
+      footer={<>
+        <Button variant="secondary" onClick={onClose} disabled={busy}>إلغاء</Button>
+        <Button onClick={submit} icon="save" disabled={busy}>
+          {busy ? 'جارٍ الحفظ…' : 'حفظ المهمة'}
+        </Button>
+      </>}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="field-label">عنوان المهمة *</label>
+          <input className="input" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: مراجعة مخططات حديد التسليح" />
+        </div>
+        <div>
+          <label className="field-label">الرمز</label>
+          <input className="input num" value={form.code || ''} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+        </div>
+        <div>
+          <label className="field-label">الحالة</label>
+          <select className="input" value={form.status || 'todo'} onChange={(e) => setForm({ ...form, status: e.target.value as Task['status'] })}>
+            <option value="todo">لم تبدأ</option>
+            <option value="progress">قيد التنفيذ</option>
+            <option value="review">قيد المراجعة</option>
+            <option value="done">مكتملة</option>
+          </select>
+        </div>
+        <div>
+          <label className="field-label">المسؤول</label>
+          <select className="input" value={form.assigneeId || ''} onChange={(e) => setForm({ ...form, assigneeId: e.target.value || null })}>
+            <option value="">— بدون مسؤول —</option>
+            {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          {teamMembers.length === 0 && (
+            <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 4 }}>
+              لا يوجد أعضاء فريق معيّنون. أضف أعضاء من تبويب "الفريق" أو "إدارة المستخدمين".
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="field-label">تاريخ الاستحقاق</label>
+          <input className="input num" type="date" value={form.dueDate || ''} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+        </div>
+        <div>
+          <label className="field-label">الأولوية</label>
+          <select className="input" value={form.priority || 'normal'} onChange={(e) => setForm({ ...form, priority: e.target.value as 'normal' | 'high' })}>
+            <option value="normal">عادية</option>
+            <option value="high">عالية</option>
+          </select>
+        </div>
+      </div>
+
+      {err && (
+        <div style={{
+          marginTop: 14,
+          padding: '10px 12px',
+          borderRadius: 8,
+          background: 'var(--danger-050)',
+          border: '1px solid var(--danger-100)',
+          color: 'var(--danger-700)',
+          fontSize: 13,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+        }}>
+          <Icon name="circle-alert" size={14} />
+          {err}
+        </div>
+      )}
+    </Modal>
   );
 }
 
