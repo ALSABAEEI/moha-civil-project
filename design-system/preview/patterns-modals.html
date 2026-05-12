@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>الأنماط — Modals & Dialogs</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="_card.css"/>
+<style>
+  body { background: var(--bg-app); padding: 28px; margin: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  h2 { font-size: 13px; font-weight: 700; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; }
+  .stage { background: rgba(11,19,32,0.55); border-radius: 14px; padding: 32px; display: flex; align-items: center; justify-content: center; min-height: 360px; }
+  .modal { background: #fff; border-radius: 14px; box-shadow: var(--shadow-xl); width: 100%; max-width: 460px; overflow: hidden; display: flex; flex-direction: column; }
+  .modal .head { display: flex; align-items: flex-start; padding: 18px 22px; border-bottom: 1px solid var(--border-1); gap: 14px; }
+  .modal .title { font-size: 16px; font-weight: 700; color: var(--ink-900); }
+  .modal .sub { font-size: 12.5px; color: var(--ink-500); margin-top: 4px; line-height: 1.6; }
+  .modal .body { padding: 20px 22px; font-size: 13.5px; color: var(--ink-700); line-height: 1.7; }
+  .modal .foot { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 22px; border-top: 1px solid var(--border-1); background: var(--ink-050); }
+  .btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; font-family: var(--font-sans); }
+  .btn.primary { background: var(--navy-800); color: #fff; }
+  .btn.danger { background: var(--danger-500); color: #fff; }
+  .btn.accent { background: var(--teal-500); color: #fff; }
+  .btn.secondary { background: #fff; color: var(--ink-800); border-color: var(--border-2); }
+  .ico-tile { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ico-danger { background: var(--danger-050); color: var(--danger-700); }
+  .ico-warn   { background: var(--warning-050); color: var(--warning-700); }
+  .ico-info   { background: var(--info-050); color: var(--info-700); }
+  .ico-navy   { background: var(--navy-050); color: var(--navy-700); }
+  label.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  label.field span { font-size: 12px; font-weight: 600; color: var(--ink-700); }
+  label.field input, label.field select, label.field textarea {
+    border: 1px solid var(--border-2); border-radius: 8px; padding: 9px 12px;
+    font-size: 13px; font-family: var(--font-sans); background: #fff;
+  }
+</style>
+</head>
+<body>
+<div class="grid">
+  <!-- Confirm destructive -->
+  <section>
+    <h2>تأكيد إجراء حسّاس</h2>
+    <div class="stage">
+      <div class="modal">
+        <div class="head"><div style="flex:1;"><div class="title">حذف المستخدم نهائياً؟</div><div class="sub">سيُحذف الحساب وجميع جلساته. الإجراءات السابقة تبقى في سجل التدقيق.</div></div></div>
+        <div class="body">
+          <div style="display:flex; gap:14px; align-items:flex-start;">
+            <div class="ico-tile ico-danger"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+            <div>سيتم حذف <b>مازن العتيبي</b> (engineer@protrack.sa) وكل ارتباطاته في 7 مشاريع نشطة. لا يمكن التراجع.</div>
+          </div>
+        </div>
+        <div class="foot"><button class="btn secondary">إلغاء</button><button class="btn danger">نعم، احذف</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Info confirm -->
+  <section>
+    <h2>تأكيد عادي</h2>
+    <div class="stage">
+      <div class="modal">
+        <div class="head"><div style="flex:1;"><div class="title">إعادة تعيين 2FA؟</div><div class="sub">سيُطلب من المستخدم إعداد تطبيق المصادقة من جديد.</div></div></div>
+        <div class="body">
+          <div style="display:flex; gap:14px; align-items:flex-start;">
+            <div class="ico-tile ico-navy"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div>
+            <div>سيتلقّى المستخدم بريداً يحتوي رابطاً صالحاً لمدة 30 دقيقة لإعداد المصادقة الثنائية من جديد.</div>
+          </div>
+        </div>
+        <div class="foot"><button class="btn secondary">إلغاء</button><button class="btn primary">إعادة التعيين</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form modal -->
+  <section style="grid-column: 1 / -1;">
+    <h2>نموذج كامل داخل Modal</h2>
+    <div class="stage">
+      <div class="modal" style="max-width: 560px;">
+        <div class="head"><div style="flex:1;"><div class="title">إنشاء مشروع جديد</div><div class="sub">املأ الحقول الأساسية. يمكنك إكمال البقية لاحقاً.</div></div></div>
+        <div class="body">
+          <label class="field"><span>اسم المشروع</span><input type="text" value="محطة الرياض الفرعية الشمالية"/></label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <label class="field"><span>التخصّص</span><select><option>مدني</option><option>كهربائي</option><option>ميكانيكي</option></select></label>
+            <label class="field"><span>المدينة</span><select><option>الرياض</option><option>جدة</option><option>الدمام</option></select></label>
+            <label class="field"><span>الميزانية (ر.س)</span><input type="text" value="184,500.00" style="font-family: var(--font-mono); direction: ltr; text-align: end;"/></label>
+            <label class="field"><span>تاريخ التسليم</span><input type="text" value="2026-09-30" style="font-family: var(--font-mono); direction: ltr;"/></label>
+          </div>
+          <label class="field"><span>الوصف المختصر</span><textarea rows="3" style="font-family: var(--font-sans); resize:vertical;">يُقام المشروع على مساحة 4,200 م² في حي النرجس...</textarea></label>
+        </div>
+        <div class="foot"><button class="btn secondary">إلغاء</button><button class="btn primary">إنشاء المشروع</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

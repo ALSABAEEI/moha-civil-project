@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .row6{ display:grid; grid-template-columns: 120px 1fr 56px; align-items:center; gap:14px; padding:6px 0;}
+  .name{ font-size:13px; font-weight:500; color:var(--ink-800);}
+  .pct{ font-size:12px; color:var(--ink-700); font-family:var(--font-mono); font-variant-numeric: tabular-nums; text-align:right;}
+  .track{ height:8px; background:var(--ink-150); border-radius:999px; overflow:hidden; position:relative;}
+  .fill{ height:100%; background:var(--teal-500); border-radius:999px;}
+  .fill.ok{ background:var(--success-500);}
+  .fill.warn{ background:var(--warning-500);}
+  .fill.danger{ background:var(--danger-500);}
+</style></head>
+<body><div class="card">
+  <div class="row6"><span class="name">Civil works</span><div class="track"><div class="fill ok" style="width:92%"></div></div><span class="pct">92%</span></div>
+  <div class="row6"><span class="name">Electrical</span><div class="track"><div class="fill" style="width:64%"></div></div><span class="pct">64%</span></div>
+  <div class="row6"><span class="name">Mechanical</span><div class="track"><div class="fill warn" style="width:38%"></div></div><span class="pct">38%</span></div>
+  <div class="row6"><span class="name">Maintenance</span><div class="track"><div class="fill danger" style="width:12%"></div></div><span class="pct">12%</span></div>
+  <div class="row6"><span class="name">Commissioning</span><div class="track"><div class="fill" style="width:0%"></div></div><span class="pct">0%</span></div>
+  <p class="meta" style="margin-top:14px;">Teal default · green at-target · ochre at-risk · brick blocked. Height 8 · radius pill</p>
+</div></body></html>

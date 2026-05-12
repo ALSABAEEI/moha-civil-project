@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .btn{ display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:8px; font-family:var(--font-sans); font-size:14px; font-weight:600; border:1px solid transparent; cursor:pointer; line-height:1; letter-spacing:-.005em;}
+  .btn-primary{ background:var(--navy-800); color:#fff;}
+  .btn-primary:hover{ background:var(--navy-700);}
+  .btn-secondary{ background:#fff; color:var(--navy-800); border-color:var(--border-2);}
+  .btn-secondary:hover{ background:var(--ink-050);}
+  .btn-accent{ background:var(--teal-500); color:#fff;}
+  .btn-ghost{ background:transparent; color:var(--ink-700);}
+  .btn-ghost:hover{ background:var(--ink-100);}
+  .btn-danger{ background:#fff; color:var(--danger-700); border-color:var(--danger-100);}
+  .btn-sm{ padding:6px 12px; font-size:13px;}
+  .btn-lg{ padding:12px 20px; font-size:15px;}
+  .btn[disabled]{ opacity:.4; pointer-events:none;}
+  .row4{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .lbl{font-size:11px; color:var(--fg-3); width:80px; font-family:var(--font-mono);}
+</style></head>
+<body><div class="card">
+  <div class="row4" style="margin-bottom:12px;">
+    <span class="lbl">primary</span>
+    <button class="btn btn-primary">Create project</button>
+    <button class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New task</button>
+    <button class="btn btn-primary" disabled>Approve</button>
+  </div>
+  <div class="row4" style="margin-bottom:12px;">
+    <span class="lbl">secondary</span>
+    <button class="btn btn-secondary">Cancel</button>
+    <button class="btn btn-secondary">Export CSV</button>
+    <button class="btn btn-accent">Accent CTA</button>
+  </div>
+  <div class="row4" style="margin-bottom:12px;">
+    <span class="lbl">ghost · danger</span>
+    <button class="btn btn-ghost">View details</button>
+    <button class="btn btn-danger">Remove vendor</button>
+  </div>
+  <div class="row4">
+    <span class="lbl">sizes</span>
+    <button class="btn btn-primary btn-sm">Small · sm</button>
+    <button class="btn btn-primary">Default · md</button>
+    <button class="btn btn-primary btn-lg">Large · lg</button>
+  </div>
+</div></body></html>

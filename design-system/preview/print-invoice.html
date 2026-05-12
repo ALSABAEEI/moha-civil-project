@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>فاتورة ضريبية — INV-08851</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  @page { size: A4; margin: 18mm; }
+  html, body { background: var(--ink-050); }
+  body { margin: 0; padding: 24px; }
+  .page {
+    width: 794px; min-height: 1123px; margin: 0 auto;
+    background: #fff; box-shadow: var(--shadow-lg);
+    padding: 40px 44px; box-sizing: border-box;
+    display: flex; flex-direction: column;
+  }
+  .num, .money { font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums; }
+  .row { display: flex; }
+  .grow { flex: 1; }
+  hr.div { border: none; border-top: 1px solid var(--border-1); margin: 18px 0; }
+
+  /* Letterhead */
+  .head { display:flex; align-items:flex-start; gap:18px; }
+  .head .org { flex:1; }
+  .org-name { font-size:18px; font-weight:800; color: var(--ink-900); }
+  .org-meta { font-size:11.5px; color: var(--ink-600); margin-top:4px; line-height:1.7; }
+  .doc-title { text-align: end; }
+  .doc-title .label { font-size: 12px; font-weight: 700; color: var(--teal-700); letter-spacing: 0.04em; text-transform: uppercase; }
+  .doc-title .num-no { font-size: 22px; font-weight: 800; color: var(--ink-900); margin-top: 4px; }
+  .doc-title .meta { font-size: 11.5px; color: var(--ink-500); margin-top: 4px; }
+
+  /* Parties */
+  .parties { display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .party {
+    background: var(--ink-050); border: 1px solid var(--border-1);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .party .lbl { font-size: 10.5px; color: var(--ink-500); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .party .nm  { font-size: 14px; font-weight: 700; color: var(--ink-900); margin-top: 5px; }
+  .party .ln  { font-size: 11.5px; color: var(--ink-600); margin-top: 3px; line-height: 1.65; }
+
+  /* Items */
+  table.items { width: 100%; border-collapse: collapse; margin-top: 18px; }
+  table.items thead th {
+    background: var(--navy-800); color: #fff;
+    font-size: 11.5px; font-weight: 700; padding: 10px 12px;
+    text-align: start;
+  }
+  table.items thead th.num-th { text-align: end; }
+  table.items tbody td {
+    padding: 12px; font-size: 12.5px; color: var(--ink-800);
+    border-bottom: 1px solid var(--ink-100); vertical-align: top;
+  }
+  table.items tbody td.amt { text-align: end; }
+  table.items tbody tr:nth-child(odd) td { background: var(--ink-050); }
+  .desc-main { font-weight: 600; color: var(--ink-900); }
+  .desc-sub { font-size: 11px; color: var(--ink-500); margin-top: 3px; line-height: 1.55; }
+
+  /* Totals */
+  .totals { display:flex; justify-content:flex-end; margin-top: 16px; }
+  .totals .box { width: 320px; border: 1px solid var(--border-1); border-radius: 10px; overflow: hidden; }
+  .totals .r { display:flex; padding: 10px 14px; align-items:center; }
+  .totals .r + .r { border-top: 1px solid var(--ink-100); }
+  .totals .lbl { flex:1; font-size: 12px; color: var(--ink-600); }
+  .totals .val { font-size: 13px; font-weight: 700; color: var(--ink-900); }
+  .totals .final { background: var(--navy-800); color: #fff; }
+  .totals .final .lbl { color: rgba(255,255,255,.78); font-weight: 600; font-size: 13px; }
+  .totals .final .val { color: #fff; font-size: 17px; font-weight: 800; }
+
+  /* Footer band */
+  .pay {
+    margin-top: 20px; padding: 14px 16px; border-radius: 10px;
+    background: var(--teal-050); border: 1px solid var(--teal-100);
+  }
+  .pay .ttl { font-size: 12px; font-weight: 700; color: var(--teal-700); letter-spacing: 0.04em; text-transform: uppercase; }
+  .pay .gr { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+  .pay .lbl { font-size: 11px; color: var(--ink-500); font-weight: 600; }
+  .pay .val { font-size: 12.5px; color: var(--ink-900); font-weight: 600; margin-top: 2px; }
+
+  .stamp-row { display:flex; justify-content:space-between; margin-top: 28px; gap: 24px; }
+  .stamp { flex: 1; border: 1px dashed var(--border-2); border-radius: 10px; padding: 28px 16px 14px; text-align: center; }
+  .stamp .ln { border-top: 1px solid var(--ink-300); width: 70%; margin: 0 auto 8px; }
+  .stamp .lbl { font-size: 11.5px; color: var(--ink-600); font-weight: 600; }
+
+  .legal {
+    margin-top: auto; padding-top: 18px;
+    font-size: 10.5px; color: var(--ink-500); line-height: 1.7;
+    border-top: 1px solid var(--border-1);
+  }
+
+  /* ZATCA QR placeholder */
+  .qr {
+    width: 96px; height: 96px; background: #fff; border: 1px solid var(--ink-300);
+    border-radius: 6px; display:grid; place-items:center; flex-shrink: 0;
+    background-image:
+      linear-gradient(45deg, var(--ink-900) 25%, transparent 25%, transparent 75%, var(--ink-900) 75%),
+      linear-gradient(45deg, var(--ink-900) 25%, transparent 25%, transparent 75%, var(--ink-900) 75%);
+    background-size: 12px 12px;
+    background-position: 0 0, 6px 6px;
+    opacity: 0.88;
+  }
+  .qr-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .qr-cap { font-size: 10px; color: var(--ink-500); font-weight: 600; }
+
+  @media print {
+    html, body { background: #fff; }
+    body { padding: 0; }
+    .page { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- Letterhead -->
+  <header class="head">
+    <div class="org" style="display:flex; gap:14px; align-items:flex-start;">
+      <img src="../assets/logo-icon.svg" style="width:54px; height:54px;"/>
+      <div>
+        <div class="org-name">مجموعة الفيصل للمقاولات</div>
+        <div class="org-meta">
+          الرياض · حي الورود · طريق الملك فهد<br/>
+          س.ت <span class="num">1010234567</span> · الرقم الضريبي <span class="num">300123456700003</span><br/>
+          ops@alfaisal-group.sa · <span class="num">+966 11 488 9000</span>
+        </div>
+      </div>
+    </div>
+    <div class="doc-title">
+      <div class="label">فاتورة ضريبية مبسّطة</div>
+      <div class="num-no num">INV-08851</div>
+      <div class="meta">إصدار <span class="num">03/05/2026</span> · استحقاق <span class="num">17/05/2026</span></div>
+    </div>
+  </header>
+
+  <hr class="div"/>
+
+  <!-- Parties -->
+  <section class="parties">
+    <div class="party">
+      <div class="lbl">المُورِّد / المُصدِر</div>
+      <div class="nm">مجموعة الفيصل للمقاولات</div>
+      <div class="ln">الرقم الضريبي: <span class="num">300123456700003</span></div>
+      <div class="ln">الرياض · المملكة العربية السعودية</div>
+    </div>
+    <div class="party">
+      <div class="lbl">العميل / المُستلِم</div>
+      <div class="nm">تبادل اللوجستية</div>
+      <div class="ln">الرقم الضريبي: <span class="num">300987654300003</span></div>
+      <div class="ln">الدمام · المدينة الصناعية</div>
+    </div>
+  </section>
+
+  <!-- Items -->
+  <table class="items">
+    <thead>
+      <tr>
+        <th style="width:36px;">#</th>
+        <th>الوصف</th>
+        <th class="num-th" style="width:60px;">الكمية</th>
+        <th class="num-th" style="width:100px;">سعر الوحدة</th>
+        <th class="num-th" style="width:90px;">الخصم</th>
+        <th class="num-th" style="width:110px;">المجموع</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num">1</td>
+        <td>
+          <div class="desc-main">أعمال صبّ خرسانة الأساسات — القسم ب</div>
+          <div class="desc-sub">مشروع CON-2025-098 · مرحلة 2 من 4 · معتمد من الاستشاري بتاريخ 28/04/2026</div>
+        </td>
+        <td class="amt num">320 م³</td>
+        <td class="amt money">980.00</td>
+        <td class="amt money">0.00</td>
+        <td class="amt money">313,600.00</td>
+      </tr>
+      <tr>
+        <td class="num">2</td>
+        <td>
+          <div class="desc-main">توريد وتركيب حديد تسليح قطر 22مم</div>
+          <div class="desc-sub">ASTM A615 Grade 60 · يشمل القصّ والتشكيل في الموقع</div>
+        </td>
+        <td class="amt num">42 طن</td>
+        <td class="amt money">2,450.00</td>
+        <td class="amt money">5,000.00</td>
+        <td class="amt money">97,900.00</td>
+      </tr>
+      <tr>
+        <td class="num">3</td>
+        <td>
+          <div class="desc-main">أجور مهندس مقيم — أبريل 2026</div>
+          <div class="desc-sub">22 يوم عمل فعلي · ساعات إضافية ضمن العقد</div>
+        </td>
+        <td class="amt num">1</td>
+        <td class="amt money">18,500.00</td>
+        <td class="amt money">0.00</td>
+        <td class="amt money">18,500.00</td>
+      </tr>
+      <tr>
+        <td class="num">4</td>
+        <td>
+          <div class="desc-main">احتجاز ضمان حسن التنفيذ (10%)</div>
+          <div class="desc-sub">يُفرج عن الاحتجاز بعد الاستلام النهائي وفق المادة 8 من العقد</div>
+        </td>
+        <td class="amt num">1</td>
+        <td class="amt money">-43,000.00</td>
+        <td class="amt money">0.00</td>
+        <td class="amt money">-43,000.00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Totals -->
+  <div class="totals">
+    <div class="box">
+      <div class="r"><span class="lbl">المجموع قبل الضريبة</span><span class="val money">387,000.00 ر.س</span></div>
+      <div class="r"><span class="lbl">الخصم الإجمالي</span><span class="val money">-5,000.00 ر.س</span></div>
+      <div class="r"><span class="lbl">الوعاء الخاضع للضريبة</span><span class="val money">382,000.00 ر.س</span></div>
+      <div class="r"><span class="lbl">ضريبة القيمة المضافة (15%)</span><span class="val money">57,300.00 ر.س</span></div>
+      <div class="r"><span class="lbl">احتجاز الضمان (10%)</span><span class="val money">-43,000.00 ر.س</span></div>
+      <div class="r final"><span class="lbl">الإجمالي المستحق</span><span class="val money">396,300.00 ر.س</span></div>
+    </div>
+  </div>
+
+  <!-- Payment band -->
+  <div class="pay">
+    <div class="row" style="align-items: flex-start; gap: 18px;">
+      <div style="flex:1;">
+        <div class="ttl">معلومات الدفع</div>
+        <div class="gr">
+          <div><div class="lbl">طريقة الدفع</div><div class="val">حوالة بنكية SARIE</div></div>
+          <div><div class="lbl">البنك</div><div class="val">البنك الأهلي السعودي</div></div>
+          <div><div class="lbl">IBAN</div><div class="val num">SA03 8000 0000 6080 1016 7519</div></div>
+          <div><div class="lbl">الرقم المرجعي</div><div class="val num">REF-CON-08851</div></div>
+          <div><div class="lbl">العملة</div><div class="val">ريال سعودي · ر.س</div></div>
+          <div><div class="lbl">تاريخ الاستحقاق</div><div class="val num">17/05/2026</div></div>
+        </div>
+      </div>
+      <div class="qr-wrap">
+        <div class="qr"></div>
+        <div class="qr-cap">رمز ZATCA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="stamp-row">
+    <div class="stamp">
+      <div class="ln"></div>
+      <div class="lbl">توقيع المُورِّد · التاريخ</div>
+    </div>
+    <div class="stamp">
+      <div class="ln"></div>
+      <div class="lbl">توقيع المُستلِم · التاريخ</div>
+    </div>
+    <div class="stamp">
+      <div class="ln"></div>
+      <div class="lbl">ختم المؤسسة</div>
+    </div>
+  </div>
+
+  <div class="legal">
+    هذه فاتورة ضريبية صادرة وفقاً لأحكام نظام ضريبة القيمة المضافة في المملكة العربية السعودية.
+    الدفع خلال 14 يوماً من تاريخ الإصدار. يُحتسب على المبالغ المتأخرة عن السداد رسوم تأخير قدرها <span class="num">0.1</span>٪ يومياً وفق المادة 12 من العقد.
+    جميع النزاعات تخضع لأنظمة المملكة العربية السعودية.
+  </div>
+</div>
+</body>
+</html>

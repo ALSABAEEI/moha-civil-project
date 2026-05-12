@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>الأنماط — Bulk Actions & Loading</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="_card.css"/>
+<style>
+  body { background: var(--bg-app); padding: 28px; margin: 0; font-family: var(--font-sans); }
+  h2 { font-size: 12px; font-weight: 700; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; }
+  section { margin-bottom: 30px; }
+  .card { background: #fff; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-1); overflow: hidden; }
+  .bulk-bar {
+    background: var(--navy-800); color: #fff; padding: 12px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .bulk-bar .count { font-size: 13px; font-weight: 700; }
+  .bulk-bar .count .num { font-family: var(--font-mono); direction: ltr; background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 6px; margin-inline-end: 6px; }
+  .bulk-bar .sep { width: 1px; height: 18px; background: rgba(255,255,255,.18); }
+  .bulk-bar .btn {
+    background: transparent; border: 1px solid rgba(255,255,255,.20); color: #fff;
+    padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .bulk-bar .btn:hover { background: rgba(255,255,255,.08); }
+  .bulk-bar .btn.danger { color: var(--danger-500); border-color: var(--danger-500); }
+  .bulk-bar .clear { color: rgba(255,255,255,.7); margin-inline-start: auto; cursor: pointer; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 16px; font-size: 13px; text-align: start; }
+  thead th { background: var(--ink-050); border-bottom: 1px solid var(--border-2); font-size: 11px; color: var(--ink-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  tbody tr { border-bottom: 1px solid var(--ink-100); }
+  tbody tr.selected { background: var(--teal-050); }
+  tbody tr:last-child { border-bottom: none; }
+  .num { font-family: var(--font-mono); direction: ltr; }
+  input[type=checkbox] { accent-color: var(--teal-500); width: 15px; height: 15px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+
+  /* Skeleton */
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: .5; } 100% { opacity: 1; } }
+  .skl { background: linear-gradient(90deg, var(--ink-100) 0%, var(--ink-150) 50%, var(--ink-100) 100%); background-size: 200% 100%; animation: pulse 1.5s ease-in-out infinite; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<section>
+  <h2>شريط الإجراءات الجماعية</h2>
+  <div class="card">
+    <div class="bulk-bar">
+      <input type="checkbox" checked style="accent-color: #fff;"/>
+      <div class="count"><span class="num">3</span>عناصر محدّدة</div>
+      <div class="sep"></div>
+      <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>اعتماد</button>
+      <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 15-9 9-9-9"/><path d="M3 3h18v6H3z"/></svg>تصدير CSV</button>
+      <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 17v-3.78a2 2 0 0 0-.59-1.42l-3-3a2 2 0 0 0-2.82 0l-1.18 1.18"/><path d="m9 7-6 6 6 6"/><path d="M22 13H6"/></svg>إعادة التعيين</button>
+      <button class="btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>حذف</button>
+      <span class="clear">إلغاء التحديد</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:36px;"><input type="checkbox" checked/></th><th>رقم الفاتورة</th><th>المورد</th><th>القيمة</th><th>الاستحقاق</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr class="selected"><td><input type="checkbox" checked/></td><td class="num">INV-08851</td><td>مجموعة الفيصل للمقاولات</td><td class="num" style="font-weight:700;">421,000.00 ر.س</td><td>17/05/2026</td><td><span class="chip" style="background:var(--review-050); color:var(--review-700);">قيد المراجعة</span></td></tr>
+        <tr class="selected"><td><input type="checkbox" checked/></td><td class="num">INV-08847</td><td>شركة نجد للأعمال الكهربائية</td><td class="num" style="font-weight:700;">142,500.00 ر.س</td><td>20/05/2026</td><td><span class="chip" style="background:var(--review-050); color:var(--review-700);">قيد المراجعة</span></td></tr>
+        <tr class="selected"><td><input type="checkbox" checked/></td><td class="num">INV-08833</td><td>التميمي للمواد الإنشائية</td><td class="num" style="font-weight:700;">88,200.00 ر.س</td><td>22/05/2026</td><td><span class="chip" style="background:var(--review-050); color:var(--review-700);">قيد المراجعة</span></td></tr>
+        <tr><td><input type="checkbox"/></td><td class="num">INV-08820</td><td>الخليج للخدمات الفنية</td><td class="num" style="font-weight:700;">54,800.00 ر.س</td><td>25/05/2026</td><td><span class="chip" style="background:var(--ink-100); color:var(--ink-700);">مسوّدة</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>حالات التحميل (Skeleton)</h2>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+    <!-- KPI skeleton -->
+    <div class="card" style="padding: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+        <div><div class="skl" style="width: 70%; height: 11px; margin-bottom: 10px;"></div><div class="skl" style="width: 90%; height: 22px;"></div></div>
+        <div><div class="skl" style="width: 70%; height: 11px; margin-bottom: 10px;"></div><div class="skl" style="width: 90%; height: 22px;"></div></div>
+        <div><div class="skl" style="width: 70%; height: 11px; margin-bottom: 10px;"></div><div class="skl" style="width: 90%; height: 22px;"></div></div>
+        <div><div class="skl" style="width: 70%; height: 11px; margin-bottom: 10px;"></div><div class="skl" style="width: 90%; height: 22px;"></div></div>
+      </div>
+    </div>
+    <!-- Table skeleton -->
+    <div class="card" style="padding: 0;">
+      <div style="padding: 14px 18px; border-bottom: 1px solid var(--border-1);"><div class="skl" style="width: 40%; height: 14px;"></div></div>
+      <div style="padding: 14px 18px; display: grid; grid-template-columns: 1fr 1fr 100px; gap: 14px; align-items: center; border-bottom: 1px solid var(--ink-100);">
+        <div class="skl" style="height: 12px;"></div><div class="skl" style="height: 12px; width: 70%;"></div><div class="skl" style="height: 22px; border-radius: 999px;"></div>
+      </div>
+      <div style="padding: 14px 18px; display: grid; grid-template-columns: 1fr 1fr 100px; gap: 14px; align-items: center; border-bottom: 1px solid var(--ink-100);">
+        <div class="skl" style="height: 12px; width: 80%;"></div><div class="skl" style="height: 12px;"></div><div class="skl" style="height: 22px; border-radius: 999px;"></div>
+      </div>
+      <div style="padding: 14px 18px; display: grid; grid-template-columns: 1fr 1fr 100px; gap: 14px; align-items: center;">
+        <div class="skl" style="height: 12px; width: 60%;"></div><div class="skl" style="height: 12px; width: 85%;"></div><div class="skl" style="height: 22px; border-radius: 999px;"></div>
+      </div>
+    </div>
+    <!-- Project card skeleton -->
+    <div class="card" style="padding: 18px;">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div class="skl" style="width: 48px; height: 48px; border-radius: 10px;"></div>
+        <div style="flex:1;">
+          <div class="skl" style="width: 30%; height: 10px; margin-bottom: 8px;"></div>
+          <div class="skl" style="width: 75%; height: 16px; margin-bottom: 10px;"></div>
+          <div class="skl" style="width: 100%; height: 8px; border-radius: 999px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Avatar list skeleton -->
+    <div class="card" style="padding: 18px;">
+      <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 14px;">
+        <div class="skl" style="width: 36px; height: 36px; border-radius: 50%;"></div>
+        <div style="flex:1;"><div class="skl" style="width: 50%; height: 12px; margin-bottom: 6px;"></div><div class="skl" style="width: 30%; height: 10px;"></div></div>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 14px;">
+        <div class="skl" style="width: 36px; height: 36px; border-radius: 50%;"></div>
+        <div style="flex:1;"><div class="skl" style="width: 60%; height: 12px; margin-bottom: 6px;"></div><div class="skl" style="width: 35%; height: 10px;"></div></div>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="skl" style="width: 36px; height: 36px; border-radius: 50%;"></div>
+        <div style="flex:1;"><div class="skl" style="width: 45%; height: 12px; margin-bottom: 6px;"></div><div class="skl" style="width: 25%; height: 10px;"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

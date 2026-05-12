@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .av{ border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-family:var(--font-sans); flex-shrink:0; position:relative;}
+  .av.lg{ width:48px; height:48px; font-size:16px;}
+  .av.md{ width:36px; height:36px; font-size:13px;}
+  .av.sm{ width:28px; height:28px; font-size:11px;}
+  .av.xs{ width:22px; height:22px; font-size:10px;}
+  .av .st{ position:absolute; bottom:-1px; right:-1px; width:10px; height:10px; border-radius:50%; border:2px solid #fff;}
+  .pile{ display:flex;}
+  .pile .av{ border:2px solid #fff; margin-left:-10px;}
+  .pile .av:first-child{ margin-left:0;}
+  .role{ display:inline-flex; align-items:center; gap:8px; padding:5px 10px 5px 5px; border-radius:999px; background:var(--ink-050); border:1px solid var(--border-1); font-size:12.5px; color:var(--ink-800); font-weight:500;}
+</style></head>
+<body><div class="card">
+  <div style="display:flex; align-items:center; gap:18px; margin-bottom:18px;">
+    <div class="av lg" style="background:var(--navy-700);">FA</div>
+    <div class="av md" style="background:var(--teal-600);">MS</div>
+    <div class="av sm" style="background:var(--blue-600);">AH<span class="st" style="background:var(--success-500);"></span></div>
+    <div class="av xs" style="background:var(--ink-700);">YK</div>
+    <div class="pile">
+      <div class="av sm" style="background:var(--navy-700);">FA</div>
+      <div class="av sm" style="background:var(--teal-600);">MS</div>
+      <div class="av sm" style="background:var(--blue-600);">AH</div>
+      <div class="av sm" style="background:var(--ink-200); color:var(--ink-700);">+5</div>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <span class="role"><span class="av xs" style="background:var(--navy-700);">FA</span>Faisal A. · Project Manager</span>
+    <span class="role"><span class="av xs" style="background:var(--teal-600);">MS</span>Mohammed S. · Engineer</span>
+    <span class="role"><span class="av xs" style="background:var(--blue-600);">NE</span>Najd Electrical · Vendor</span>
+  </div>
+</div></body></html>

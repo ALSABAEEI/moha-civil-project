@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .pcard{ background:#fff; border:1px solid var(--border-1); border-radius:12px; box-shadow:var(--shadow-sm); padding:18px 20px; display:flex; flex-direction:column; gap:14px;}
+  .ph{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .ttl{ font-size:15px; font-weight:600; color:var(--ink-900); line-height:1.3;}
+  .code{ font-family:var(--font-mono); font-size:11px; color:var(--ink-500); margin-top:2px;}
+  .chip{ display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;}
+  .dot{ width:6px; height:6px; border-radius:50%;}
+  .stats{ display:flex; gap:18px; font-size:12px;}
+  .stat .k{ color:var(--ink-500);}
+  .stat .v{ font-weight:600; color:var(--ink-900); font-family:var(--font-mono); margin-left:6px;}
+  .track{ height:6px; background:var(--ink-150); border-radius:999px; overflow:hidden;}
+  .fill{ height:100%; background:var(--teal-500);}
+  .avs{ display:flex;}
+  .av{ width:24px; height:24px; border-radius:50%; background:var(--navy-700); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; border:1.5px solid #fff; margin-left:-6px; font-weight:600;}
+  .av:first-child{ margin-left:0;}
+</style></head>
+<body><div class="card" style="background:var(--canvas);">
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+    <div class="pcard">
+      <div class="ph">
+        <div>
+          <div class="ttl">Riyadh North Substation</div>
+          <div class="code">CIV-2026-014 · Electrical</div>
+        </div>
+        <span class="chip" style="background:var(--teal-050); color:var(--teal-700);"><span class="dot" style="background:var(--teal-500);"></span>In progress</span>
+      </div>
+      <div class="track"><div class="fill" style="width:64%"></div></div>
+      <div class="stats"><div class="stat"><span class="k">Due</span><span class="v">18 Jun</span></div><div class="stat"><span class="k">Budget</span><span class="v">SAR 1.25M</span></div><div class="avs"><div class="av">FA</div><div class="av" style="background:var(--teal-600);">MS</div><div class="av" style="background:var(--blue-600);">+3</div></div></div>
+    </div>
+    <div class="pcard">
+      <div class="ph">
+        <div>
+          <div class="ttl">Jeddah Port Maintenance</div>
+          <div class="code">MNT-2026-021 · Mechanical</div>
+        </div>
+        <span class="chip" style="background:var(--warning-050); color:var(--warning-700);"><span class="dot" style="background:var(--warning-500);"></span>At risk</span>
+      </div>
+      <div class="track"><div class="fill" style="width:38%; background:var(--warning-500);"></div></div>
+      <div class="stats"><div class="stat"><span class="k">Due</span><span class="v">02 Jun</span></div><div class="stat"><span class="k">Budget</span><span class="v">SAR 720K</span></div><div class="avs"><div class="av" style="background:var(--ink-700);">AH</div><div class="av" style="background:var(--blue-600);">YK</div></div></div>
+    </div>
+  </div>
+</div></body></html>

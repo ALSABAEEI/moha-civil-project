@@ -1,0 +1,14 @@
+/* Shared frame for preview cards */
+html, body { margin: 0; padding: 0; background: #fff; }
+body { font-family: var(--font-sans); color: var(--fg-1); }
+.card {
+  padding: 24px 28px;
+  background: #fff;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.mono { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); letter-spacing: 0; }
+.token-label { font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); margin-top: 6px; letter-spacing: 0; }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .swatch { border-radius:10px; padding:14px 16px; display:flex; flex-direction:column; justify-content:space-between; min-height:96px; }
+  .swatch .name { font-weight:600; font-size:13px; }
+  .swatch .hex { font-family: var(--font-mono); font-size:10.5px; opacity:.85; letter-spacing:0;}
+</style>
+</head>
+<body><div class="card">
+  <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:10px;">
+    <div class="swatch" style="background:var(--navy-900); color:#fff;"><span class="name">navy-900</span><span class="hex">#07172B</span></div>
+    <div class="swatch" style="background:var(--navy-800); color:#fff;"><span class="name">navy-800 ●</span><span class="hex">#0F2A4A</span></div>
+    <div class="swatch" style="background:var(--navy-700); color:#fff;"><span class="name">navy-700</span><span class="hex">#14385F</span></div>
+    <div class="swatch" style="background:var(--navy-600); color:#fff;"><span class="name">navy-600</span><span class="hex">#1C4877</span></div>
+    <div class="swatch" style="background:var(--navy-100); color:var(--navy-800);"><span class="name">navy-100</span><span class="hex">#E4ECF5</span></div>
+    <div class="swatch" style="background:var(--navy-050); color:var(--navy-800);"><span class="name">navy-050</span><span class="hex">#F2F6FB</span></div>
+
+    <div class="swatch" style="background:var(--teal-700); color:#fff;"><span class="name">teal-700</span><span class="hex">#0E7A7A</span></div>
+    <div class="swatch" style="background:var(--teal-600); color:#fff;"><span class="name">teal-600</span><span class="hex">#128E8E</span></div>
+    <div class="swatch" style="background:var(--teal-500); color:#fff;"><span class="name">teal-500 ●</span><span class="hex">#17A2A2</span></div>
+    <div class="swatch" style="background:var(--teal-400); color:#fff;"><span class="name">teal-400</span><span class="hex">#3FB6B6</span></div>
+    <div class="swatch" style="background:var(--teal-100); color:var(--teal-700);"><span class="name">teal-100</span><span class="hex">#D4F0F0</span></div>
+    <div class="swatch" style="background:var(--teal-050); color:var(--teal-700);"><span class="name">teal-050</span><span class="hex">#ECF8F8</span></div>
+  </div>
+  <p class="meta" style="margin-top:14px;">● primary token · navy-800 for chrome &amp; primary buttons, teal-500 for accent &amp; focus</p>
+</div></body></html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .field{ display:flex; flex-direction:column; gap:6px;}
+  .field label{ font-size:13px; font-weight:500; color:var(--ink-800);}
+  .input{ height:38px; border:1px solid var(--border-2); border-radius:6px; padding:0 12px; font-family:var(--font-sans); font-size:14px; color:var(--ink-900); background:#fff; width:100%;}
+  .input::placeholder{ color:var(--ink-400);}
+  .input.focused{ border-color:var(--teal-500); box-shadow: var(--shadow-focus);}
+  .input.error{ border-color:var(--danger-500); box-shadow: 0 0 0 3px rgba(214,59,59,.18);}
+  .helper{ font-size:12px; color:var(--ink-500);}
+  .helper.err{ color:var(--danger-700);}
+  .grp{ display:grid; grid-template-columns: 1fr 1fr; gap:16px;}
+</style></head>
+<body><div class="card">
+  <div class="grp">
+    <div class="field">
+      <label>Project name</label>
+      <input class="input" value="Riyadh North Substation"/>
+      <span class="helper">Visible to admins and assigned engineers</span>
+    </div>
+    <div class="field">
+      <label>Project code</label>
+      <input class="input focused" value="CIV-2026-014"/>
+      <span class="helper">Focused state — teal ring</span>
+    </div>
+    <div class="field">
+      <label>Discipline</label>
+      <input class="input" placeholder="Select discipline…" value=""/>
+      <span class="helper">Placeholder example</span>
+    </div>
+    <div class="field">
+      <label>Budget (SAR)</label>
+      <input class="input error" value="—"/>
+      <span class="helper err">Budget is required to publish</span>
+    </div>
+  </div>
+</div></body></html>

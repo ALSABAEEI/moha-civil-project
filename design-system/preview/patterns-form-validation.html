@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>الأنماط — Form Validation</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="_card.css"/>
+<style>
+  body { background: var(--bg-app); padding: 28px; margin: 0; font-family: var(--font-sans); }
+  h2 { font-size: 12px; font-weight: 700; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 920px; }
+  label.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  label.field > .lbl { font-size: 12.5px; font-weight: 600; color: var(--ink-800); display: flex; align-items: center; gap: 6px; }
+  label.field > .lbl .req { color: var(--danger-600); }
+  label.field input, label.field select, label.field textarea {
+    border: 1px solid var(--border-2); border-radius: 8px; padding: 9px 12px;
+    font-size: 13px; font-family: var(--font-sans); background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  label.field input:focus { outline: none; border-color: var(--teal-500); box-shadow: 0 0 0 3px var(--teal-100); }
+  label.field .hint { font-size: 11.5px; color: var(--ink-500); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+  /* states */
+  .state-error input { border-color: var(--danger-500); background: var(--danger-050); }
+  .state-error .hint { color: var(--danger-700); }
+  .state-warn input { border-color: var(--warning-500); background: var(--warning-050); }
+  .state-warn .hint { color: var(--warning-700); }
+  .state-success input { border-color: var(--success-500); }
+  .state-success .hint { color: var(--success-700); }
+  .state-disabled input { background: var(--ink-050); color: var(--ink-500); cursor: not-allowed; }
+
+  .num { font-family: var(--font-mono); direction: ltr; text-align: end; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--border-2); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+  .checkbox-row.on { background: var(--teal-050); border-color: var(--teal-500); }
+  .checkbox-row input { accent-color: var(--teal-500); margin-top: 2px; }
+  .radio-pill { display: inline-flex; padding: 4px; gap: 4px; background: var(--ink-100); border-radius: 999px; }
+  .radio-pill button { padding: 6px 14px; border-radius: 999px; border: none; background: transparent; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink-700); font-family: inherit; }
+  .radio-pill button.on { background: #fff; color: var(--ink-900); box-shadow: var(--shadow-sm); }
+
+  .toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+  .toggle-thumb { width: 36px; height: 20px; background: var(--ink-300); border-radius: 999px; position: relative; transition: background .15s; }
+  .toggle-thumb::after { content:''; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform .15s; }
+  .toggle.on .toggle-thumb { background: var(--teal-500); }
+  .toggle.on .toggle-thumb::after { transform: translateX(-16px); }
+</style>
+</head>
+<body>
+<h2>حالات الحقول</h2>
+<div class="grid">
+  <label class="field">
+    <span class="lbl">اسم المشروع <span class="req">*</span></span>
+    <input type="text" value="محطة الرياض الفرعية الشمالية"/>
+    <span class="hint">يظهر للفريق وفي التقارير المطبوعة.</span>
+  </label>
+
+  <label class="field state-success">
+    <span class="lbl">الرقم الضريبي <span class="req">*</span></span>
+    <input type="text" value="300123456700003" class="num"/>
+    <span class="hint">✓ رقم صالح ومسجّل في هيئة الزكاة والضريبة</span>
+  </label>
+
+  <label class="field state-error">
+    <span class="lbl">البريد الإلكتروني <span class="req">*</span></span>
+    <input type="text" value="omar@protrack"/>
+    <span class="hint">✕ صيغة البريد غير صحيحة. مثال: name@protrack.sa</span>
+  </label>
+
+  <label class="field state-warn">
+    <span class="lbl">الميزانية المتوقعة</span>
+    <input type="text" value="2,400,000.00" class="num"/>
+    <span class="hint">⚠ القيمة تتجاوز المعدّل المعتاد لهذا التخصّص بنسبة 38٪</span>
+  </label>
+
+  <label class="field state-disabled">
+    <span class="lbl">رمز المشروع</span>
+    <input type="text" value="CIV-2026-AUTO" class="num" disabled/>
+    <span class="hint">يُولَّد تلقائياً عند الحفظ.</span>
+  </label>
+
+  <label class="field">
+    <span class="lbl">المدينة</span>
+    <select>
+      <option>الرياض</option>
+      <option>جدة</option>
+      <option>الدمام</option>
+      <option>الخبر</option>
+    </select>
+  </label>
+
+  <div>
+    <h2 style="margin-top: 8px;">الراديو والمفاتيح</h2>
+    <div style="margin-bottom: 18px;">
+      <div class="radio-pill">
+        <button class="on">يومي</button><button>أسبوعي</button><button>شهري</button>
+      </div>
+    </div>
+    <div class="toggle on" style="margin-bottom: 12px;">
+      <span class="toggle-thumb"></span>
+      <span style="font-size: 13px; font-weight: 600; color: var(--ink-800);">إرسال نسخة بالبريد</span>
+    </div>
+    <div class="toggle" style="margin-bottom: 12px;">
+      <span class="toggle-thumb"></span>
+      <span style="font-size: 13px; font-weight: 600; color: var(--ink-800);">جدولة تلقائية</span>
+    </div>
+  </div>
+
+  <div>
+    <h2 style="margin-top: 8px;">قوائم اختيار</h2>
+    <div class="checkbox-row on"><input type="checkbox" checked/><div><div style="font-size:13px; font-weight:700; color:var(--ink-900);">إخطار البريد</div><div style="font-size:11.5px; color:var(--ink-600); margin-top:2px;">لجميع التحديثات المالية</div></div></div>
+    <div class="checkbox-row on"><input type="checkbox" checked/><div><div style="font-size:13px; font-weight:700; color:var(--ink-900);">إخطار داخل التطبيق</div><div style="font-size:11.5px; color:var(--ink-600); margin-top:2px;">يظهر في جرس الإشعارات</div></div></div>
+    <div class="checkbox-row"><input type="checkbox"/><div><div style="font-size:13px; font-weight:700; color:var(--ink-900);">رسالة نصية SMS</div><div style="font-size:11.5px; color:var(--ink-600); margin-top:2px;">للحالات العاجلة فقط</div></div></div>
+  </div>
+</div>
+</body>
+</html>

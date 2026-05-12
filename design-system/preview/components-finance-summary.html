@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>Finance summary</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="_card.css"/>
+<style>
+  body { background: var(--bg-app); }
+  .card { padding: 28px; }
+
+  /* ============ Wrapper ============ */
+  .fin {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  /* ============ Hero ============ */
+  .fin-hero {
+    padding: 22px 24px 20px;
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(23,162,162,0.10) 0%, rgba(23,162,162,0) 55%),
+      linear-gradient(180deg, var(--navy-050) 0%, var(--bg-surface) 100%);
+    border-bottom: 1px solid var(--border-1);
+  }
+  .fin-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .fin-head-l { display: flex; align-items: center; gap: 10px; }
+  .fin-eyebrow {
+    font-size: 11px; font-weight: 700; color: var(--teal-700);
+    letter-spacing: var(--tracking-caps); text-transform: uppercase;
+  }
+  .fin-title { font-size: 17px; font-weight: 700; color: var(--ink-900); }
+  .fin-period {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--ink-700);
+    background: var(--ink-000); border: 1px solid var(--border-1);
+    padding: 5px 10px; border-radius: var(--radius-pill);
+  }
+  .fin-period .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-500); }
+
+  .fin-figure {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 4px;
+  }
+  .fin-figure .amt {
+    font-family: var(--font-mono); direction: ltr;
+    font-size: 38px; font-weight: 700; color: var(--ink-900);
+    line-height: 1; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .fin-figure .unit {
+    font-size: 16px; font-weight: 600; color: var(--ink-600);
+  }
+  .fin-figure .delta {
+    margin-inline-start: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600;
+    color: var(--success-700);
+    background: var(--success-050);
+    border: 1px solid var(--success-100);
+    padding: 4px 10px; border-radius: var(--radius-pill);
+  }
+  .delta svg { width: 12px; height: 12px; }
+
+  .fin-sub {
+    font-size: 12px; color: var(--ink-500); margin-bottom: 16px;
+  }
+
+  /* ============ Stacked allocation bar ============ */
+  .alloc {
+    display: flex; height: 10px; border-radius: var(--radius-pill);
+    overflow: hidden; background: var(--ink-150);
+    box-shadow: inset 0 0 0 1px rgba(11,19,32,0.04);
+  }
+  .alloc-spent      { background: var(--navy-800); }
+  .alloc-committed  { background: var(--teal-500); }
+  .alloc-remaining  { background: var(--ink-200); }
+
+  .legend {
+    margin-top: 14px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .leg {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-1);
+    border-radius: var(--radius-md);
+  }
+  .leg .sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .leg-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+  .leg-label { font-size: 11px; color: var(--ink-500); font-weight: 600; }
+  .leg-val {
+    font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums;
+    font-size: 14px; font-weight: 700; color: var(--ink-900);
+  }
+  .leg-pct { font-size: 11px; color: var(--ink-500); font-weight: 600; margin-inline-start: auto; }
+
+  /* ============ Sub-KPI grid ============ */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border-1);
+  }
+  .kpi {
+    padding: 16px 18px;
+    border-inline-start: 1px solid var(--border-1);
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--bg-surface);
+  }
+  .kpi:first-child { border-inline-start: 0; }
+  .kpi-top { display: flex; align-items: center; gap: 8px; }
+  .kpi-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .kpi-icon svg { width: 14px; height: 14px; }
+  .kpi-icon.teal   { background: var(--teal-050);    color: var(--teal-700); }
+  .kpi-icon.navy   { background: var(--navy-050);    color: var(--navy-700); }
+  .kpi-icon.amber  { background: var(--warning-050); color: var(--warning-700); }
+  .kpi-icon.rose   { background: var(--danger-050);  color: var(--danger-700); }
+  .kpi-label { font-size: 12px; font-weight: 600; color: var(--ink-600); }
+  .kpi-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+  .kpi-val {
+    font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums;
+    font-size: 19px; font-weight: 700; color: var(--ink-900); line-height: 1.1;
+  }
+  .kpi-val .u { font-family: var(--font-sans); font-size: 11px; color: var(--ink-500); font-weight: 600; margin-inline-start: 4px; }
+  .kpi-trend { font-size: 11px; font-weight: 600; }
+  .kpi-trend.up   { color: var(--success-700); }
+  .kpi-trend.down { color: var(--danger-700); }
+  .kpi-trend.flat { color: var(--ink-500); }
+  /* Sparkline reads RTL — most recent point on the right side of *time*, which is the LEFT of the visual in RTL */
+  .spark { width: 100%; height: 24px; display: block; }
+
+  /* ============ Category breakdown ============ */
+  .cats {
+    padding: 18px 22px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-1);
+  }
+  .cats-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .cats-title { font-size: 13px; font-weight: 700; color: var(--ink-800); }
+  .cats-meta  { font-size: 11px; color: var(--ink-500); font-weight: 600; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 90px 56px;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+  }
+  .cat-name { font-size: 12px; font-weight: 600; color: var(--ink-800); }
+  .cat-bar  { height: 6px; background: var(--ink-100); border-radius: var(--radius-pill); overflow: hidden; }
+  .cat-bar > i { display: block; height: 100%; border-radius: var(--radius-pill); }
+  .cat-amt {
+    font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums;
+    font-size: 12px; font-weight: 700; color: var(--ink-800); text-align: end;
+  }
+  .cat-pct {
+    font-family: var(--font-mono); direction: ltr; font-variant-numeric: tabular-nums;
+    font-size: 11px; color: var(--ink-500); font-weight: 600; text-align: end;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <section class="fin">
+
+    <!-- ============ Hero ============ -->
+    <div class="fin-hero">
+      <div class="fin-head">
+        <div class="fin-head-l">
+          <span class="fin-eyebrow">المتابعة المالية</span>
+          <span class="fin-title">· نظرة عامة على المحفظة</span>
+        </div>
+        <span class="fin-period"><span class="dot"></span>الربع الثاني · ٢٠٢٦</span>
+      </div>
+
+      <div class="fin-figure">
+        <span class="amt">17,490,000</span>
+        <span class="unit">ر.س</span>
+        <span class="delta">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3-3 3 3"/></svg>
+          ‎+8.2٪ مقابل الربع السابق
+        </span>
+      </div>
+      <div class="fin-sub">إجمالي الميزانية المعتمدة عبر ١٢ مشروعاً نشطاً</div>
+
+      <!-- Stacked allocation bar — order: spent (53%) · committed (24%) · remaining (23%) -->
+      <div class="alloc" role="img" aria-label="توزيع الميزانية">
+        <div class="alloc-spent"      style="flex: 53"></div>
+        <div class="alloc-committed"  style="flex: 24"></div>
+        <div class="alloc-remaining"  style="flex: 23"></div>
+      </div>
+
+      <div class="legend">
+        <div class="leg">
+          <span class="sw" style="background:var(--navy-800)"></span>
+          <span class="leg-text">
+            <span class="leg-label">مصروف فعلي</span>
+            <span class="leg-val">9,331,620 ر.س</span>
+          </span>
+          <span class="leg-pct">53٪</span>
+        </div>
+        <div class="leg">
+          <span class="sw" style="background:var(--teal-500)"></span>
+          <span class="leg-text">
+            <span class="leg-label">مرتبط بعقود</span>
+            <span class="leg-val">4,197,600 ر.س</span>
+          </span>
+          <span class="leg-pct">24٪</span>
+        </div>
+        <div class="leg">
+          <span class="sw" style="background:var(--ink-300)"></span>
+          <span class="leg-text">
+            <span class="leg-label">متبقّي قابل للصرف</span>
+            <span class="leg-val">3,960,780 ر.س</span>
+          </span>
+          <span class="leg-pct">23٪</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Sub-KPIs ============ -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-top">
+          <span class="kpi-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </span>
+          <span class="kpi-label">معدّل الصرف الشهري</span>
+        </div>
+        <div class="kpi-row">
+          <span class="kpi-val">1,422,840<span class="u">ر.س</span></span>
+          <span class="kpi-trend up">▲ 4.1٪</span>
+        </div>
+        <!-- RTL sparkline: latest point on the LEFT (newest reads first in Arabic) -->
+        <svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="transform:scaleX(-1)">
+          <path d="M0,16 L12,14 L24,17 L36,11 L48,13 L60,8 L72,10 L84,5 L100,6" fill="none" stroke="var(--teal-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="100" cy="6" r="2.4" fill="var(--teal-500)"/>
+        </svg>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-top">
+          <span class="kpi-icon navy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          </span>
+          <span class="kpi-label">مستحقّ هذا الشهر</span>
+        </div>
+        <div class="kpi-row">
+          <span class="kpi-val">683,200<span class="u">ر.س</span></span>
+          <span class="kpi-trend flat">٧ فواتير</span>
+        </div>
+        <svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="transform:scaleX(-1)">
+          <path d="M0,10 L14,12 L28,9 L42,14 L56,11 L70,15 L84,12 L100,14" fill="none" stroke="var(--navy-600)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="100" cy="14" r="2.4" fill="var(--navy-600)"/>
+        </svg>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-top">
+          <span class="kpi-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </span>
+          <span class="kpi-label">قيد المراجعة</span>
+        </div>
+        <div class="kpi-row">
+          <span class="kpi-val">218,450<span class="u">ر.س</span></span>
+          <span class="kpi-trend flat">٤ طلبات</span>
+        </div>
+        <svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="transform:scaleX(-1)">
+          <path d="M0,12 L14,9 L28,13 L42,8 L56,12 L70,7 L84,11 L100,9" fill="none" stroke="var(--warning-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="100" cy="9" r="2.4" fill="var(--warning-500)"/>
+        </svg>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-top">
+          <span class="kpi-icon rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.7L2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0z"/></svg>
+          </span>
+          <span class="kpi-label">فواتير متأخّرة</span>
+        </div>
+        <div class="kpi-row">
+          <span class="kpi-val">96,750<span class="u">ر.س</span></span>
+          <span class="kpi-trend down">١ فاتورة</span>
+        </div>
+        <svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="transform:scaleX(-1)">
+          <path d="M0,18 L14,17 L28,16 L42,15 L56,12 L70,10 L84,8 L100,6" fill="none" stroke="var(--danger-500)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="100" cy="6" r="2.4" fill="var(--danger-500)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ============ Category breakdown ============ -->
+    <div class="cats">
+      <div class="cats-head">
+        <span class="cats-title">الصرف حسب فئة المشروع</span>
+        <span class="cats-meta">آخر ٩٠ يوماً</span>
+      </div>
+      <div class="cat-row">
+        <span class="cat-name">مبانٍ سكنية</span>
+        <span class="cat-bar"><i style="width:78%;background:var(--navy-800)"></i></span>
+        <span class="cat-amt">3,842,500</span>
+        <span class="cat-pct">41٪</span>
+      </div>
+      <div class="cat-row">
+        <span class="cat-name">طرق وبنية تحتية</span>
+        <span class="cat-bar"><i style="width:54%;background:var(--teal-500)"></i></span>
+        <span class="cat-amt">2,510,180</span>
+        <span class="cat-pct">27٪</span>
+      </div>
+      <div class="cat-row">
+        <span class="cat-name">مرافق صناعية</span>
+        <span class="cat-bar"><i style="width:36%;background:var(--blue-500)"></i></span>
+        <span class="cat-amt">1,694,300</span>
+        <span class="cat-pct">18٪</span>
+      </div>
+      <div class="cat-row">
+        <span class="cat-name">صيانة وتشغيل</span>
+        <span class="cat-bar"><i style="width:26%;background:var(--ink-400)"></i></span>
+        <span class="cat-amt">1,284,640</span>
+        <span class="cat-pct">14٪</span>
+      </div>
+    </div>
+
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!-- Light-on-dark logo variant for use on light backgrounds / print -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>الشعار — متغيّرات</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { background: var(--bg-app); padding: 28px; margin: 0; font-family: var(--font-sans); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .swatch { padding: 40px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: var(--shadow-sm); }
+  .swatch .lbl { font-size: 11.5px; color: var(--ink-500); font-weight: 600; }
+  .swatch.dark { background: var(--navy-800); }
+  .swatch.dark .lbl { color: rgba(255,255,255,.6); }
+  .swatch.light { background: #fff; border: 1px solid var(--border-2); }
+  .swatch.teal { background: var(--teal-500); }
+  .swatch.teal .lbl { color: rgba(255,255,255,.85); }
+  .lockup { display: flex; align-items: center; gap: 10px; }
+  .lockup .word { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+  .lockup.on-dark .word { color: #fff; }
+  .lockup.on-light .word { color: var(--navy-800); }
+</style>
+</head>
+<body>
+<div class="grid">
+
+  <!-- on dark -->
+  <div class="swatch dark">
+    <div class="lockup on-dark">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
+        <rect x="4" y="4" width="56" height="56" rx="12" fill="#23B59B"/>
+        <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#fff"/>
+      </svg>
+      <span class="word">ProTrack</span>
+    </div>
+    <div class="lbl">للأسطح الداكنة · الافتراضي</div>
+  </div>
+
+  <!-- on light -->
+  <div class="swatch light">
+    <div class="lockup on-light">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
+        <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E2238"/>
+        <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#23B59B"/>
+      </svg>
+      <span class="word">ProTrack</span>
+    </div>
+    <div class="lbl">للأسطح الفاتحة · للطباعة</div>
+  </div>
+
+  <!-- monochrome on color -->
+  <div class="swatch teal">
+    <div class="lockup on-dark">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
+        <rect x="4" y="4" width="56" height="56" rx="12" fill="#fff"/>
+        <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#23B59B"/>
+      </svg>
+      <span class="word">ProTrack</span>
+    </div>
+    <div class="lbl">على الألوان الثانوية</div>
+  </div>
+
+  <!-- favicon -->
+  <div class="swatch light">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+      <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E2238"/>
+      <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#23B59B"/>
+    </svg>
+    <div class="lbl">أيقونة · 64×64</div>
+  </div>
+
+  <!-- 32 -->
+  <div class="swatch light">
+    <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+      <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E2238"/>
+      <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#23B59B"/>
+    </svg>
+    <div class="lbl">أيقونة · 32×32</div>
+  </div>
+
+  <!-- monochrome -->
+  <div class="swatch light">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+      <rect x="4" y="4" width="56" height="56" rx="12" fill="#0E2238"/>
+      <path d="M22 44V22h10a8 8 0 0 1 0 16h-4v6h-6Z M28 32h4a2 2 0 0 0 0-4h-4v4Z M46 32a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="#fff"/>
+    </svg>
+    <div class="lbl">أحادي · مونوكروم</div>
+  </div>
+
+</div>
+</body>
+</html>

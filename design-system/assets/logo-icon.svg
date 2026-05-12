@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  
+  
+  <rect x="2" y="2" width="28" height="28" rx="6" fill="#0F2A4A"></rect>
+  <rect x="34" y="2" width="28" height="28" rx="6" fill="#0F2A4A"></rect>
+  <rect x="66" y="2" width="28" height="28" rx="6" fill="#17A2A2"></rect>
+  
+  <rect x="2" y="34" width="28" height="28" rx="6" fill="#0F2A4A"></rect>
+  
+  <rect x="2" y="66" width="28" height="28" rx="6" fill="#D9DEE5"></rect>
+  <rect x="34" y="66" width="28" height="28" rx="6" fill="#1F6FA6"></rect>
+  <rect x="66" y="66" width="28" height="28" rx="6" fill="#17A2A2"></rect>
+  
+  <polyline points="16,80 48,48 80,16" stroke="#0F2A4A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"></polyline>
+  
+  <circle cx="16" cy="80" r="4.5" fill="#FFFFFF" stroke="#0F2A4A" stroke-width="2.5"></circle>
+  <circle cx="48" cy="48" r="4.5" fill="#FFFFFF" stroke="#0F2A4A" stroke-width="2.5"></circle>
+  <circle cx="80" cy="16" r="4.5" fill="#FFFFFF" stroke="#0F2A4A" stroke-width="2.5"></circle>
+  
+  <path d="M71 15.5 L77.5 22 L88.5 11" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+</svg>

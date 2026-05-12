@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  .col{ background:var(--ink-050); border:1px solid var(--border-1); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px;}
+  .ch{ display:flex; justify-content:space-between; align-items:center; padding:2px 4px 4px;}
+  .ch .t{ font-size:12px; font-weight:600; color:var(--ink-700); letter-spacing:.04em; text-transform:uppercase;}
+  .ch .n{ font-size:11px; color:var(--ink-500); font-family:var(--font-mono); background:#fff; padding:1px 7px; border-radius:999px; border:1px solid var(--border-1);}
+  .tk{ background:#fff; border:1px solid var(--border-1); border-radius:8px; padding:10px 12px; box-shadow:var(--shadow-xs); display:flex; flex-direction:column; gap:6px;}
+  .tk .id{ font-family:var(--font-mono); font-size:10px; color:var(--ink-500);}
+  .tk .ti{ font-size:13px; color:var(--ink-900); font-weight:500; line-height:1.35;}
+  .tk .mt{ display:flex; justify-content:space-between; align-items:center;}
+  .av{ width:20px; height:20px; border-radius:50%; background:var(--navy-700); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:600;}
+  .due{ font-size:11px; color:var(--ink-500); font-family:var(--font-mono);}
+  .pchip{ font-size:10px; font-weight:600; padding:1.5px 7px; border-radius:999px; letter-spacing:.04em; text-transform:uppercase;}
+</style></head>
+<body><div class="card" style="background:var(--canvas);">
+  <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+    <div class="col">
+      <div class="ch"><span class="t">In progress</span><span class="n">3</span></div>
+      <div class="tk"><span class="id">CIV-2026-014 · T-08</span><span class="ti">Pour foundation slab — section B</span><div class="mt"><div class="av">MS</div><span class="due">Due 14 May</span></div></div>
+      <div class="tk"><span class="id">CIV-2026-014 · T-09</span><span class="ti">Submit reinforcement shop drawings</span><div class="mt"><div class="av" style="background:var(--teal-600);">AH</div><span class="pchip" style="background:var(--warning-050); color:var(--warning-700);">High</span></div></div>
+    </div>
+    <div class="col">
+      <div class="ch"><span class="t">In review</span><span class="n">1</span></div>
+      <div class="tk"><span class="id">CIV-2026-014 · T-06</span><span class="ti">Geotech report — Najd lab</span><div class="mt"><div class="av" style="background:var(--blue-600);">FA</div><span class="due">Today</span></div></div>
+    </div>
+    <div class="col">
+      <div class="ch"><span class="t">Completed</span><span class="n">12</span></div>
+      <div class="tk"><span class="id">CIV-2026-014 · T-04</span><span class="ti">Site mobilization</span><div class="mt"><div class="av" style="background:var(--ink-700);">YK</div><span class="due">02 May</span></div></div>
+    </div>
+  </div>
+</div></body></html>

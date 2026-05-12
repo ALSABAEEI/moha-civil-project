@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../colors_and_type.css"><link rel="stylesheet" href="_card.css">
+<style>
+  table{ width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{ background:var(--ink-050); color:var(--ink-500); font-weight:600; font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:10px 14px; text-align:left; border-bottom:1px solid var(--border-2);}
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--border-1); color:var(--ink-800);}
+  tbody tr:hover{ background:var(--ink-050);}
+  .code{ font-family:var(--font-mono); font-size:12px; color:var(--ink-600);}
+  .num{ font-family:var(--font-mono); font-variant-numeric: tabular-nums; text-align:right;}
+  .chip{ display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;}
+  .dot{ width:6px; height:6px; border-radius:50%;}
+  .wrap{ border:1px solid var(--border-1); border-radius:10px; overflow:hidden; background:#fff;}
+</style></head>
+<body><div class="card" style="background:var(--canvas); padding:18px 20px;">
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr><th>Invoice</th><th>Vendor</th><th class="num">Amount</th><th>Status</th><th class="num">Due</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="code">INV-08842</td><td>Najd Electrical Co.</td><td class="num">SAR 184,500</td><td><span class="chip" style="background:var(--success-050); color:var(--success-700);">Paid</span></td><td class="num">02 May</td></tr>
+        <tr><td class="code">INV-08843</td><td>Al-Faisal Civil Works</td><td class="num">SAR 312,000</td><td><span class="chip" style="background:var(--warning-050); color:var(--warning-700);">Pending</span></td><td class="num">11 May</td></tr>
+        <tr><td class="code">INV-08847</td><td>Modern Mechanical Ltd.</td><td class="num">SAR 96,750</td><td><span class="chip" style="background:var(--danger-050); color:var(--danger-700);">Overdue</span></td><td class="num">28 Apr</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></body></html>
