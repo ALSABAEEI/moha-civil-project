@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
@@ -13,10 +13,10 @@ export function Settings() {
   const isAdmin = role === 'admin';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 880 }}>
-      <AccountCard profile={profile} roleLabel={role ? ROLE_LABEL[role] : ''} />
-      <PasswordCard />
-      {isAdmin && <DisciplinesCard />}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 880 }}>
+      <AccountSection profile={profile} roleLabel={role ? ROLE_LABEL[role] : ''} />
+      <PasswordSection />
+      {isAdmin && <DisciplinesSection />}
       {!isAdmin && (
         <Card>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -32,13 +32,114 @@ export function Settings() {
 }
 
 /* =========================================================
+   Collapsible section shell (accordion style — closed by default)
+   ========================================================= */
+
+function Section({
+  title,
+  subtitle,
+  icon,
+  children,
+  defaultOpen = false,
+  rightHint,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  rightHint?: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Card pad={0}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          padding: '16px 20px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'start',
+          fontFamily: 'var(--font-sans)',
+          color: 'var(--ink-900)',
+        }}
+      >
+        <span style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: 'var(--navy-050)',
+          color: 'var(--navy-700)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Icon name={icon} size={18} />
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>
+            {title}
+          </span>
+          {subtitle && (
+            <span style={{
+              display: 'block',
+              fontSize: 12.5,
+              color: 'var(--ink-500)',
+              marginTop: 3,
+              lineHeight: 1.6,
+            }}>
+              {subtitle}
+            </span>
+          )}
+        </span>
+        {rightHint && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-500)', fontSize: 12 }}>
+            {rightHint}
+          </span>
+        )}
+        <span
+          aria-hidden
+          style={{
+            display: 'inline-flex',
+            color: 'var(--ink-500)',
+            transition: 'transform var(--dur-2) var(--ease-out)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        >
+          <Icon name="chevron-down" size={18} mirror={false} />
+        </span>
+      </button>
+      {open && (
+        <div style={{
+          padding: '4px 20px 20px',
+          borderTop: '1px solid var(--border-1)',
+        }}>
+          {children}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* =========================================================
    Account info — read-only
    ========================================================= */
 
-function AccountCard({ profile, roleLabel }: { profile: User | null; roleLabel: string }) {
+function AccountSection({ profile, roleLabel }: { profile: User | null; roleLabel: string }) {
   return (
-    <Card>
-      <SectionHeader title="بيانات الحساب" subtitle="معلومات حسابك الحالية." />
+    <Section
+      title="بيانات الحساب"
+      subtitle="معلومات حسابك الحالية."
+      icon="users-round"
+      rightHint={profile?.email}
+    >
       <div style={{
         marginTop: 14,
         display: 'grid',
@@ -50,7 +151,7 @@ function AccountCard({ profile, roleLabel }: { profile: User | null; roleLabel: 
         <Field label="القسم" value={profile?.department || '—'} />
         <Field label="الحالة" value={profile?.status === 'active' ? 'نشط' : profile?.status || '—'} />
       </div>
-    </Card>
+    </Section>
   );
 }
 
@@ -69,7 +170,7 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
    Password reset
    ========================================================= */
 
-function PasswordCard() {
+function PasswordSection() {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [show, setShow] = useState(false);
@@ -94,8 +195,11 @@ function PasswordCard() {
   };
 
   return (
-    <Card>
-      <SectionHeader title="تغيير كلمة المرور" subtitle="حدّث كلمة المرور لحسابك. يجب أن تكون 8 أحرف فأكثر." />
+    <Section
+      title="تغيير كلمة المرور"
+      subtitle="حدّث كلمة المرور لحسابك. يجب أن تكون 8 أحرف فأكثر."
+      icon="lock"
+    >
       <form onSubmit={submit} style={{
         marginTop: 14,
         display: 'grid',
@@ -129,7 +233,15 @@ function PasswordCard() {
             required
           />
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-700)', cursor: 'pointer', gridColumn: 'span 2' }}>
+        <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: 13,
+          color: 'var(--ink-700)',
+          cursor: 'pointer',
+          gridColumn: 'span 2',
+        }}>
           <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} style={{ accentColor: 'var(--teal-500)' }} />
           إظهار كلمة المرور أثناء الكتابة
         </label>
@@ -159,7 +271,7 @@ function PasswordCard() {
           </Button>
         </div>
       </form>
-    </Card>
+    </Section>
   );
 }
 
@@ -167,7 +279,7 @@ function PasswordCard() {
    Disciplines management (admin only)
    ========================================================= */
 
-function DisciplinesCard() {
+function DisciplinesSection() {
   const { disciplines, refresh } = useAppData();
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -209,12 +321,12 @@ function DisciplinesCard() {
   };
 
   return (
-    <Card>
-      <SectionHeader
-        title="تخصصات المشاريع والموردين"
-        subtitle="القائمة المستخدمة في نموذجَي إضافة مشروع وإضافة مورد. الحذف لا يحذف السجلات المرتبطة، فقط يزيل الخيار من القائمة."
-      />
-
+    <Section
+      title="تخصصات المشاريع والموردين"
+      subtitle="القائمة المستخدمة في نموذجَي إضافة مشروع وإضافة مورد. الحذف لا يحذف السجلات المرتبطة، فقط يزيل الخيار من القائمة."
+      icon="tag"
+      rightHint={`${disciplines.length} تخصص`}
+    >
       <form onSubmit={add} style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
         <input
           className="input"
@@ -299,17 +411,6 @@ function DisciplinesCard() {
           </span>
         ))}
       </div>
-    </Card>
-  );
-}
-
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{title}</div>
-      {subtitle && (
-        <div style={{ fontSize: 12.5, color: 'var(--ink-500)', marginTop: 4, lineHeight: 1.7 }}>{subtitle}</div>
-      )}
-    </div>
+    </Section>
   );
 }
