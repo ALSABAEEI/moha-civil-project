@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Card } from '@/components/Card';
 import { Chip } from '@/components/Chip';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
@@ -25,7 +24,11 @@ const STATUS_TONE: Record<string, 'completed' | 'review' | 'blocked'> = {
 
 const ROLES: Role[] = ['admin', 'pm', 'engineer', 'finance', 'vendor'];
 
-export function Users() {
+/**
+ * Embeddable users-management body. Designed to drop into a Settings <Section>
+ * with no outer Card wrapper (the Section provides its own surface).
+ */
+export function UsersManager() {
   const { data: users, loading, refetch } = useAsync(() => listUsers(), []);
   const { people, refresh } = useAppData();
   const { role } = useAuth();
@@ -34,18 +37,17 @@ export function Users() {
 
   return (
     <>
-      <Card pad={0}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>المستخدمون</div>
-            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
-              إدارة الأدوار والصلاحيات وإضافة أعضاء جدد.
-            </div>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ flex: 1, fontSize: 12.5, color: 'var(--ink-500)', lineHeight: 1.7 }}>
+            إدارة الأدوار والصلاحيات وإضافة أعضاء جدد.
           </div>
           {canCreate && (
             <Button icon="user-plus" onClick={() => setCreating(true)}>إضافة عضو</Button>
           )}
         </div>
+
+        <div style={{ border: '1px solid var(--border-1)', borderRadius: 10, overflow: 'hidden' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr',
@@ -98,7 +100,8 @@ export function Users() {
             <div style={{ marginTop: 10, fontSize: 13 }}>لا يوجد أعضاء بعد.</div>
           </div>
         )}
-      </Card>
+        </div>
+      </div>
 
       <UserFormModal
         open={creating}

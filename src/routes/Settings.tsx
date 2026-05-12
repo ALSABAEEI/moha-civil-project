@@ -6,6 +6,7 @@ import { useAuth } from '@/stores/auth';
 import { useAppData } from '@/contexts/AppData';
 import { createDiscipline, deleteDiscipline, updateMyPassword } from '@/data/api';
 import { ROLE_LABEL } from '@/lib/roles';
+import { UsersManager } from '@/routes/Users';
 import type { User } from '@/types';
 
 export function Settings() {
@@ -16,13 +17,22 @@ export function Settings() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 880 }}>
       <AccountSection profile={profile} roleLabel={role ? ROLE_LABEL[role] : ''} />
       <PasswordSection />
+      {isAdmin && (
+        <Section
+          title="إدارة المستخدمين"
+          subtitle="الأعضاء، الأدوار، والصلاحيات. متاحة للمشرف فقط."
+          icon="users-round"
+        >
+          <UsersManager />
+        </Section>
+      )}
       {isAdmin && <DisciplinesSection />}
       {!isAdmin && (
         <Card>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <Icon name="info" size={18} style={{ color: 'var(--info-700)', marginTop: 2 }} />
             <div style={{ fontSize: 13, color: 'var(--ink-700)', lineHeight: 1.7 }}>
-              <b>إدارة التخصصات والإعدادات المتقدمة</b> متاحة لدور <span style={{ fontWeight: 700 }}>{ROLE_LABEL.admin}</span> فقط.
+              <b>إدارة التخصصات والأعضاء</b> متاحة لدور <span style={{ fontWeight: 700 }}>{ROLE_LABEL.admin}</span> فقط.
             </div>
           </div>
         </Card>

@@ -18,7 +18,6 @@ const NAV: NavItem[] = [
   { to: '/app/projects',   label: 'المشاريع',      icon: 'folder-kanban', roles: ['admin', 'pm', 'engineer', 'finance'] },
   { to: '/app/tasks',      label: 'المهام',        icon: 'list-checks',   roles: ['admin', 'pm', 'engineer'] },
   { to: '/app/vendors',    label: 'الموردون',      icon: 'shield-check',  roles: ['admin', 'pm', 'finance'] },
-  { to: '/app/engineers',  label: 'المهندسون',     icon: 'hard-hat',      roles: ['admin', 'pm'] },
   { to: '/app/assignments',label: 'التعيينات',     icon: 'split',         roles: ['admin', 'pm'] },
 ];
 
@@ -30,8 +29,6 @@ const MONEY: NavItem[] = [
 const SYS: NavItem[] = [
   { to: '/app/approvals',     label: 'الاعتمادات',         icon: 'check-check', roles: ['admin', 'pm', 'finance'] },
   { to: '/app/audit',         label: 'سجل التدقيق',        icon: 'scroll-text', roles: ['admin'] },
-  { to: '/app/notifications', label: 'الإشعارات',         icon: 'bell' },
-  { to: '/app/users',         label: 'إدارة المستخدمين',  icon: 'users-round', roles: ['admin'] },
   { to: '/app/settings',      label: 'الإعدادات',          icon: 'settings-2' },
 ];
 

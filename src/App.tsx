@@ -12,7 +12,6 @@ import { TaskBoard } from '@/routes/TaskBoard';
 import { Vendors } from '@/routes/Vendors';
 import { Finance } from '@/routes/Finance';
 import { Notifications } from '@/routes/Notifications';
-import { Users } from '@/routes/Users';
 import { Settings } from '@/routes/Settings';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -56,8 +55,6 @@ export default function App() {
           <Route path="vendors" element={<Vendors />} />
           <Route path="finance" element={<Finance />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="users" element={<Users />} />
-          <Route path="engineers" element={<Placeholder title="المهندسون" subtitle="فِرَق التنفيذ والتوزيع" />} />
           <Route path="assignments" element={<Placeholder title="التعيينات" subtitle="توزيع المهندسين والموردين على المشاريع" />} />
           <Route path="reports" element={<Placeholder title="التقارير" subtitle="تقارير دورية ومخصّصة" />} />
           <Route path="approvals" element={<Placeholder title="الاعتمادات" subtitle="الطلبات بانتظار اعتمادك" />} />
