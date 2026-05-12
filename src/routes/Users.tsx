@@ -22,7 +22,10 @@ const STATUS_TONE: Record<string, 'completed' | 'review' | 'blocked'> = {
   suspended: 'blocked',
 };
 
-const ROLES: Role[] = ['admin', 'pm', 'engineer', 'finance', 'vendor'];
+// Internal-staff roles only. The "vendor" enum value still exists in the schema
+// for compatibility, but workers/subcontractors live in the Vendors table and
+// do not get user accounts.
+const ROLES: Role[] = ['admin', 'pm', 'engineer', 'finance'];
 
 /**
  * Embeddable users-management body. Designed to drop into a Settings <Section>
@@ -40,7 +43,7 @@ export function UsersManager() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ flex: 1, fontSize: 12.5, color: 'var(--ink-500)', lineHeight: 1.7 }}>
-            إدارة الأدوار والصلاحيات وإضافة أعضاء جدد.
+            الأعضاء الذين يستخدمون النظام: المدراء، المهندسون، الإداريون، والماليون. العمالة الميدانية تُدار من <b style={{ color: 'var(--ink-700)' }}>الموردون</b>.
           </div>
           {canCreate && (
             <Button icon="user-plus" onClick={() => setCreating(true)}>إضافة عضو</Button>

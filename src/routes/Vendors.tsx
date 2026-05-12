@@ -43,7 +43,7 @@ export function Vendors() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>الموردون</div>
             <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
-              قائمة الموردين والمقاولين من الباطن وحالة التأهيل.
+              العمالة والمقاولون من الباطن المعتمدون لتنفيذ أعمال المشاريع — لا يملكون حسابات في النظام.
             </div>
           </div>
           {canCreate && (

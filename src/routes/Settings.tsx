@@ -20,7 +20,7 @@ export function Settings() {
       {isAdmin && (
         <Section
           title="إدارة المستخدمين"
-          subtitle="الأعضاء، الأدوار، والصلاحيات. متاحة للمشرف فقط."
+          subtitle="الأعضاء الداخليون: المدراء، المهندسون، الإداريون، والماليون. لا تشمل العمالة الميدانية."
           icon="users-round"
         >
           <UsersManager />
