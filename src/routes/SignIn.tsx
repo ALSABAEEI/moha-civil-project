@@ -119,32 +119,7 @@ export function SignIn() {
             >
               {submitting ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول'}
             </Button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--ink-400)', fontSize: 12 }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border-1)' }} />
-              أو
-              <div style={{ flex: 1, height: 1, background: 'var(--border-1)' }} />
-            </div>
-
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              icon="key-round"
-              disabled
-              title="قيد التطوير"
-              block
-            >
-              الدخول بالهوية الوطنية (نفاذ)
-            </Button>
           </form>
-
-          <div style={{ fontSize: 12, color: 'var(--ink-500)', textAlign: 'center', lineHeight: 1.7 }}>
-            بالدخول فإنك توافق على{' '}
-            <a style={{ color: 'var(--teal-600)', fontWeight: 600, cursor: 'pointer' }}>الشروط</a>
-            {' '}و{' '}
-            <a style={{ color: 'var(--teal-600)', fontWeight: 600, cursor: 'pointer' }}>سياسة الخصوصية</a>.
-          </div>
         </div>
       </div>
 
