@@ -13,6 +13,7 @@ import { Vendors } from '@/routes/Vendors';
 import { Finance } from '@/routes/Finance';
 import { Notifications } from '@/routes/Notifications';
 import { Users } from '@/routes/Users';
+import { Settings } from '@/routes/Settings';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { signedIn, bootstrapped } = useAuth();
@@ -62,7 +63,7 @@ export default function App() {
           <Route path="approvals" element={<Placeholder title="الاعتمادات" subtitle="الطلبات بانتظار اعتمادك" />} />
           <Route path="audit" element={<Placeholder title="سجل التدقيق" subtitle="حركة كل تغيير حسّاس في النظام" />} />
           <Route path="search" element={<Placeholder title="نتائج البحث" subtitle="النتائج عبر المشاريع والفواتير والمستندات" />} />
-          <Route path="settings" element={<Placeholder title="الإعدادات" subtitle="تفضيلات الحساب والنظام" />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/signin" replace />} />

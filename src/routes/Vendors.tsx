@@ -23,7 +23,6 @@ const STATUS_TONE: Record<string, 'completed' | 'review' | 'navy' | 'blocked'> =
   suspended: 'blocked',
 };
 
-const DISCIPLINES = ['كهربائي', 'مدني', 'ميكانيكي', 'إنشاءات', 'صيانة', 'خدمة فنية', 'توريد مواد', 'أخرى'];
 const STATUS_OPTIONS: Vendor['status'][] = ['active', 'awaiting', 'prequalified', 'suspended'];
 
 export function Vendors() {
@@ -111,8 +110,10 @@ function VendorFormModal({ open, onClose, onSaved }: {
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const { disciplines } = useAppData();
+  const disciplineNames = disciplines.map((d) => d.name);
   const [form, setForm] = useState<Partial<NewVendorInput>>({
-    discipline: DISCIPLINES[0],
+    discipline: disciplineNames[0] || '',
     status: 'awaiting',
   });
   const [busy, setBusy] = useState(false);
@@ -120,7 +121,7 @@ function VendorFormModal({ open, onClose, onSaved }: {
 
   useMemo(() => {
     if (open) {
-      setForm({ discipline: DISCIPLINES[0], status: 'awaiting' });
+      setForm({ discipline: disciplineNames[0] || '', status: 'awaiting' });
       setErr(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,9 +173,22 @@ function VendorFormModal({ open, onClose, onSaved }: {
         </div>
         <div>
           <label className="field-label">التخصص *</label>
-          <select className="input" value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value })}>
-            {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
+          {disciplineNames.length === 0 ? (
+            <div style={{
+              padding: '9px 12px',
+              background: 'var(--warning-050)',
+              border: '1px solid var(--warning-100)',
+              borderRadius: 6,
+              fontSize: 12.5,
+              color: 'var(--warning-700)',
+            }}>
+              لا توجد تخصصات مُعرَّفة. أضفها من الإعدادات أولاً.
+            </div>
+          ) : (
+            <select className="input" value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value })}>
+              {disciplineNames.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          )}
         </div>
         <div>
           <label className="field-label">الحالة</label>

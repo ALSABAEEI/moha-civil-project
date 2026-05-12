@@ -23,8 +23,6 @@ const STATUS_OPTIONS: { id: ProjectStatus | 'all'; label: string }[] = [
   { id: 'completed', label: 'مكتمل' },
 ];
 
-const DISCIPLINES = ['مدني', 'كهربائي', 'ميكانيكي', 'إنشاءات', 'صيانة', 'خدمة فنية'];
-
 const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
   progress: 'قيد التنفيذ',
   review: 'قيد المراجعة',
@@ -204,10 +202,12 @@ function ProjectFormModal({ open, onClose, onSaved }: {
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
-  const { people } = useAppData();
+  const { people, disciplines } = useAppData();
   const { personId } = useAuth();
+  const disciplineNames = disciplines.map((d) => d.name);
+  const defaultDiscipline = disciplineNames[0] || '';
   const [form, setForm] = useState<Partial<NewProjectInput> & { team: string[] }>({
-    discipline: DISCIPLINES[0],
+    discipline: defaultDiscipline,
     status: 'progress',
     progress: 0,
     budget: 0,
@@ -219,10 +219,11 @@ function ProjectFormModal({ open, onClose, onSaved }: {
   // Reset form whenever the modal re-opens
   useMemo(() => {
     if (open) {
+      const first = disciplineNames[0] || '';
       setForm({
-        code: suggestProjectCode(form.discipline || DISCIPLINES[0]),
+        code: suggestProjectCode(first),
         name: '',
-        discipline: DISCIPLINES[0],
+        discipline: first,
         status: 'progress',
         progress: 0,
         budget: 0,
@@ -293,9 +294,22 @@ function ProjectFormModal({ open, onClose, onSaved }: {
         </div>
         <div>
           <label className="field-label">التخصص *</label>
-          <select className="input" value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value, code: form.code || suggestProjectCode(e.target.value) })}>
-            {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
+          {disciplineNames.length === 0 ? (
+            <div style={{
+              padding: '9px 12px',
+              background: 'var(--warning-050)',
+              border: '1px solid var(--warning-100)',
+              borderRadius: 6,
+              fontSize: 12.5,
+              color: 'var(--warning-700)',
+            }}>
+              لا توجد تخصصات مُعرَّفة. أضفها من الإعدادات أولاً.
+            </div>
+          ) : (
+            <select className="input" value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value, code: form.code || suggestProjectCode(e.target.value) })}>
+              {disciplineNames.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          )}
         </div>
         <div style={{ gridColumn: 'span 2' }}>
           <label className="field-label">اسم المشروع *</label>

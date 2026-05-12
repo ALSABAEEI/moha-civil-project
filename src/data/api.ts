@@ -169,6 +169,50 @@ export async function listPeople(): Promise<Person[]> {
   return (data || []).map(mapPerson);
 }
 
+/* =========================================================
+   Disciplines (admin-managed lookup list for project/vendor dropdowns)
+   ========================================================= */
+
+export interface Discipline {
+  id: string;
+  name: string;
+  displayOrder: number;
+}
+
+export async function listDisciplines(): Promise<Discipline[]> {
+  const { data, error } = await client()
+    .from('disciplines')
+    .select('*')
+    .order('display_order')
+    .order('name');
+  if (error) throw error;
+  return (data || []).map((r) => ({ id: r.id, name: r.name, displayOrder: r.display_order }));
+}
+
+export async function createDiscipline(name: string, displayOrder = 0): Promise<Discipline> {
+  const { data, error } = await client()
+    .from('disciplines')
+    .insert({ name, display_order: displayOrder })
+    .select()
+    .single();
+  if (error) throw error;
+  return { id: data.id, name: data.name, displayOrder: data.display_order };
+}
+
+export async function deleteDiscipline(id: string): Promise<void> {
+  const { error } = await client().from('disciplines').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* =========================================================
+   Account: password reset (uses active Supabase session)
+   ========================================================= */
+
+export async function updateMyPassword(newPassword: string): Promise<void> {
+  const { error } = await client().auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 export async function listVendors(): Promise<Vendor[]> {
   const { data: vendors, error } = await client().from('vendors').select('*').order('name');
   if (error) throw error;
