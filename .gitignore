@@ -33,3 +33,7 @@ pnpm-debug.log*
 # contents are already tracked under /design-system after the initial copy)
 ProTrack Design System/
 
+# Temporary commit message files
+COMMIT_MSG.tmp
+*.commit.tmp
+
