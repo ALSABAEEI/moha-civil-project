@@ -5,15 +5,18 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { StatusChip, Chip, PaymentChip } from '@/components/Chip';
 import { Progress } from '@/components/Progress';
-import { Avatar, AvatarStack } from '@/components/Avatar';
+import { Avatar } from '@/components/Avatar';
 import { Modal } from '@/components/Modal';
 import { useAuth } from '@/stores/auth';
+import { useAsync } from '@/hooks/useAsync';
+import { useAppData } from '@/contexts/AppData';
 import {
-  ACTIVITY, EXPENSES, PAYMENTS, PEOPLE, PROJECTS, TASKS, TERMS, VENDORS,
-} from '@/data/mock';
+  createExpense, createTerm, deleteExpense, deleteTerm,
+  getProject, listExpenses, listPayments, listTasks, listTerms, updateExpense, updateTerm,
+} from '@/data/api';
 import { SARw } from '@/lib/format';
 import { computeProjectFinance, EXPENSE_TYPES, PAYMENT_METHODS, TERM_STATUS_LABEL, TERM_TYPES } from '@/lib/finance';
-import type { Expense, Term } from '@/types';
+import type { Expense, Project, Term } from '@/types';
 
 type TabId = 'overview' | 'terms' | 'tasks' | 'vendors' | 'team' | 'expenses' | 'finance' | 'documents' | 'activity';
 
@@ -33,21 +36,40 @@ export function ProjectDetail() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
-
-  const project = PROJECTS.find((p) => p.id === projectId) || PROJECTS[0];
   const [tab, setTab] = useState<TabId>('overview');
 
-  // Local state for expenses + terms so we can demonstrate live finance recalc on add/edit/delete.
-  // (In Supabase mode, this would be replaced by a query + mutation; the math stays the same.)
-  const [expenses, setExpenses] = useState<Expense[]>(EXPENSES);
-  const [terms, setTerms] = useState<Term[]>(TERMS);
+  const projectQ  = useAsync(() => projectId ? getProject(projectId) : Promise.resolve(null), [projectId]);
+  const termsQ    = useAsync(() => projectId ? listTerms(projectId)  : Promise.resolve([]),   [projectId]);
+  const tasksQ    = useAsync(() => projectId ? listTasks(projectId)  : Promise.resolve([]),   [projectId]);
+  const expensesQ = useAsync(() => projectId ? listExpenses(projectId) : Promise.resolve([]), [projectId]);
+  const paymentsQ = useAsync(() => projectId ? listPayments(projectId) : Promise.resolve([]), [projectId]);
 
-  const finance = useMemo(
-    () => computeProjectFinance(project, expenses, terms, PAYMENTS),
-    [project, expenses, terms],
+  if (projectQ.loading) return <Loading />;
+  if (!projectQ.data)   return <NotFound onBack={() => navigate('/app/projects')} />;
+
+  const project = projectQ.data;
+  const terms = termsQ.data ?? [];
+  const tasks = tasksQ.data ?? [];
+  const expenses = expensesQ.data ?? [];
+  const payments = paymentsQ.data ?? [];
+
+  const finance = computeProjectFinance(
+    project,
+    expenses,
+    terms,
+    payments.map((p) => ({ ...p, project: project.code })),
   );
 
   const canEdit = role === 'admin' || role === 'pm' || role === 'finance';
+
+  const refetchAll = async () => {
+    await Promise.all([
+      projectQ.refetch(),
+      expensesQ.refetch(),
+      termsQ.refetch(),
+      paymentsQ.refetch(),
+    ]);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -96,31 +118,26 @@ export function ProjectDetail() {
       {tab === 'terms' && (
         <TermsTab
           projectId={project.id}
-          terms={terms.filter((t) => t.project === project.id)}
+          terms={terms}
           canEdit={canEdit}
-          onAdd={(t) => setTerms((cur) => [...cur, t])}
-          onUpdate={(t) => setTerms((cur) => cur.map((x) => (x.id === t.id ? t : x)))}
-          onDelete={(id) => setTerms((cur) => cur.filter((x) => x.id !== id))}
-          nextId={Math.max(0, ...terms.map((t) => t.id)) + 1}
+          reload={async () => { await termsQ.refetch(); await refetchAll(); }}
         />
       )}
-      {tab === 'tasks' && <TasksTab projectId={project.id} />}
+      {tab === 'tasks' && <TasksTab tasks={tasks} />}
       {tab === 'vendors' && <VendorsTab />}
       {tab === 'team' && <TeamTab team={project.team} />}
       {tab === 'expenses' && (
         <ExpensesTab
           projectId={project.id}
-          terms={terms.filter((t) => t.project === project.id)}
-          expenses={expenses.filter((e) => e.project === project.id)}
+          terms={terms}
+          expenses={expenses}
           canEdit={canEdit}
-          onAdd={(e) => setExpenses((cur) => [...cur, e])}
-          onUpdate={(e) => setExpenses((cur) => cur.map((x) => (x.id === e.id ? e : x)))}
-          onDelete={(id) => setExpenses((cur) => cur.filter((x) => x.id !== id))}
+          reload={async () => { await expensesQ.refetch(); await refetchAll(); }}
         />
       )}
       {tab === 'finance' && (
         <FinanceTab
-          projectCode={project.code}
+          payments={payments}
           finance={finance}
         />
       )}
@@ -130,12 +147,31 @@ export function ProjectDetail() {
   );
 }
 
+function Loading() {
+  return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-500)' }}>جارٍ التحميل…</div>;
+}
+
+function NotFound({ onBack }: { onBack: () => void }) {
+  return (
+    <Card>
+      <div style={{ padding: 60, textAlign: 'center' }}>
+        <Icon name="inbox" size={26} style={{ color: 'var(--ink-300)' }} />
+        <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: 'var(--ink-800)' }}>المشروع غير موجود</div>
+        <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink-500)' }}>قد يكون المشروع غير معيّن لك أو محذوف.</div>
+        <div style={{ marginTop: 16 }}>
+          <Button variant="secondary" onClick={onBack}>العودة إلى المشاريع</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 /* =========================================================
    Header — branding + live finance KPIs
    ========================================================= */
 
 function Header({ project, finance, onBack }: {
-  project: typeof PROJECTS[number];
+  project: Project;
   finance: ReturnType<typeof computeProjectFinance>;
   onBack: () => void;
 }) {
@@ -196,10 +232,6 @@ function Header({ project, finance, onBack }: {
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="secondary" icon="share-2">مشاركة</Button>
-            <Button icon="plus">مهمة جديدة</Button>
-          </div>
         </div>
 
         <div style={{
@@ -244,13 +276,14 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'su
 }
 
 /* =========================================================
-   Overview tab
+   Overview
    ========================================================= */
 
 function OverviewTab({ project, finance }: {
-  project: typeof PROJECTS[number];
+  project: Project;
   finance: ReturnType<typeof computeProjectFinance>;
 }) {
+  const { people } = useAppData();
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
       <Card>
@@ -264,7 +297,6 @@ function OverviewTab({ project, finance }: {
           { id: 'm4', label: 'التركيب والتشغيل',   start: 58, end: 88,  status: 'todo' },
           { id: 'm5', label: 'الاستلام النهائي',   start: 86, end: 100, status: 'todo' },
         ]} />
-
         <div style={{
           marginTop: 22,
           paddingTop: 18,
@@ -289,18 +321,20 @@ function OverviewTab({ project, finance }: {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {project.team.map((id) => {
-            const person = PEOPLE.find((p) => p.id === id);
+            const person = people.find((p) => p.id === id);
             return (
               <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Avatar person={id} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>{person?.role}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name || '—'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>{person?.role || ''}</div>
                 </div>
-                <Icon name="more-horizontal" size={16} style={{ color: 'var(--ink-500)' }} />
               </div>
             );
           })}
+          {project.team.length === 0 && (
+            <div style={{ fontSize: 12.5, color: 'var(--ink-500)' }}>لا يوجد أعضاء فريق معيّنون بعد.</div>
+          )}
         </div>
       </Card>
     </div>
@@ -348,20 +382,18 @@ function Timeline({ phases }: { phases: { id: string; label: string; start: numb
 }
 
 /* =========================================================
-   Terms tab (بنود المشروع)
+   Terms tab
    ========================================================= */
 
-function TermsTab({ projectId, terms, canEdit, onAdd, onUpdate, onDelete, nextId }: {
+function TermsTab({ projectId, terms, canEdit, reload }: {
   projectId: string;
   terms: Term[];
   canEdit: boolean;
-  onAdd: (t: Term) => void;
-  onUpdate: (t: Term) => void;
-  onDelete: (id: number) => void;
-  nextId: number;
+  reload: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState<Term | null>(null);
   const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   return (
     <>
@@ -393,9 +425,9 @@ function TermsTab({ projectId, terms, canEdit, onAdd, onUpdate, onDelete, nextId
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: 14,
+              fontSize: 12,
               flexShrink: 0,
-            }}>{t.id}</div>
+            }}>{i + 1}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>{t.title}</div>
@@ -417,8 +449,10 @@ function TermsTab({ projectId, terms, canEdit, onAdd, onUpdate, onDelete, nextId
             {canEdit && (
               <div style={{ display: 'flex', gap: 6 }}>
                 <Button variant="ghost" size="sm" icon="edit-3" onClick={() => setEditing(t)}>تحرير</Button>
-                <Button variant="danger" size="sm" icon="trash-2" onClick={() => {
-                  if (confirm(`حذف البند "${t.title}"؟`)) onDelete(t.id);
+                <Button variant="danger" size="sm" icon="trash-2" disabled={busy} onClick={async () => {
+                  if (!confirm(`حذف البند "${t.title}"؟`)) return;
+                  setBusy(true);
+                  try { await deleteTerm(t.id); await reload(); } finally { setBusy(false); }
                 }}>حذف</Button>
               </div>
             )}
@@ -436,45 +470,52 @@ function TermsTab({ projectId, terms, canEdit, onAdd, onUpdate, onDelete, nextId
         open={creating || editing !== null}
         onClose={() => { setCreating(false); setEditing(null); }}
         initial={editing}
-        onSave={(t) => {
-          if (editing) onUpdate(t);
-          else onAdd({ ...t, id: nextId, project: projectId });
-          setCreating(false);
-          setEditing(null);
+        onSave={async (t) => {
+          setBusy(true);
+          try {
+            if (editing) await updateTerm(t);
+            else await createTerm({ ...t, project: projectId });
+            await reload();
+          } finally {
+            setBusy(false);
+            setCreating(false);
+            setEditing(null);
+          }
         }}
+        busy={busy}
       />
     </>
   );
 }
 
-function TermFormModal({ open, onClose, initial, onSave }: {
+function TermFormModal({ open, onClose, initial, onSave, busy }: {
   open: boolean;
   onClose: () => void;
   initial: Term | null;
-  onSave: (t: Term) => void;
+  onSave: (t: Term) => Promise<void>;
+  busy: boolean;
 }) {
   const [form, setForm] = useState<Partial<Term>>({});
 
-  // Reset form whenever modal opens with a different term
   useMemo(() => {
     if (open) setForm(initial || { type: TERM_TYPES[0], status: 'planned' });
   }, [open, initial]);
 
   if (!open) return null;
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.title || !form.summary) return;
-    onSave({
-      id: initial?.id ?? 0,
+    await onSave({
+      id: initial?.id ?? '',
       project: initial?.project ?? '',
       title: form.title!,
       type: form.type || TERM_TYPES[0],
-      amount: form.amount ? Number(form.amount) : undefined,
-      startDate: form.startDate,
-      endDate: form.endDate,
+      amount: form.amount !== undefined && form.amount !== null && (form.amount as any) !== '' ? Number(form.amount) : undefined,
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
       status: (form.status as Term['status']) || 'planned',
       summary: form.summary!,
-      notes: form.notes,
+      notes: form.notes || undefined,
     });
   };
 
@@ -486,8 +527,10 @@ function TermFormModal({ open, onClose, initial, onSave }: {
       subtitle="أضف بنود العقد والأعمال المُكوِّنة للمشروع."
       width={620}
       footer={<>
-        <Button variant="secondary" onClick={onClose}>إلغاء</Button>
-        <Button onClick={submit} icon="save">حفظ البند</Button>
+        <Button variant="secondary" onClick={onClose} disabled={busy}>إلغاء</Button>
+        <Button onClick={submit} icon="save" disabled={busy}>
+          {busy ? 'جارٍ الحفظ…' : 'حفظ البند'}
+        </Button>
       </>}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
@@ -539,20 +582,20 @@ function TermFormModal({ open, onClose, initial, onSave }: {
 }
 
 /* =========================================================
-   Expenses tab (مصروفات المشروع) — priority module
+   Expenses tab
    ========================================================= */
 
-function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onDelete }: {
+function ExpensesTab({ projectId, terms, expenses, canEdit, reload }: {
   projectId: string;
   terms: Term[];
   expenses: Expense[];
   canEdit: boolean;
-  onAdd: (e: Expense) => void;
-  onUpdate: (e: Expense) => void;
-  onDelete: (id: string) => void;
+  reload: () => Promise<void>;
 }) {
+  const { vendors } = useAppData();
   const [editing, setEditing] = useState<Expense | null>(null);
   const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
 
@@ -563,7 +606,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onD
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>مصروفات المشروع</div>
             <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
-              المصروفات الفعلية المُسجَّلة على هذا المشروع — الحساب المالي يُحدَّث تلقائيًا عند الإضافة أو التعديل أو الحذف.
+              المصروفات الفعلية المُسجَّلة — الحساب المالي يُحدَّث تلقائيًا عند الإضافة أو التعديل أو الحذف.
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
@@ -596,7 +639,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onD
           <span></span>
         </div>
         {expenses.map((e, i) => {
-          const vendor = VENDORS.find((v) => v.id === e.vendor);
+          const vendor = vendors.find((v) => v.id === e.vendor);
           return (
             <div key={e.id} style={{
               display: 'grid',
@@ -610,7 +653,7 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onD
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 600, color: 'var(--ink-900)' }}>{e.name}</div>
                 <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2, direction: 'ltr', textAlign: 'start' }}>
-                  {e.id}{e.invoiceNo ? ` · ${e.invoiceNo}` : ''}
+                  {e.invoiceNo || e.id.slice(0, 8)}
                 </div>
               </div>
               <Chip tone="navy" dot={false}>{e.type}</Chip>
@@ -623,7 +666,11 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onD
                   <button onClick={() => setEditing(e)} style={iconBtn()} title="تحرير">
                     <Icon name="edit-3" size={14} />
                   </button>
-                  <button onClick={() => { if (confirm('حذف هذا المصروف؟ سيتم تحديث الملخص المالي تلقائيًا.')) onDelete(e.id); }} style={iconBtn('var(--danger-700)')} title="حذف">
+                  <button disabled={busy} onClick={async () => {
+                    if (!confirm('حذف هذا المصروف؟ سيتم تحديث الملخص المالي تلقائيًا.')) return;
+                    setBusy(true);
+                    try { await deleteExpense(e.id); await reload(); } finally { setBusy(false); }
+                  }} style={iconBtn('var(--danger-700)')} title="حذف">
                     <Icon name="trash-2" size={14} />
                   </button>
                 </div>
@@ -645,11 +692,18 @@ function ExpensesTab({ projectId, terms, expenses, canEdit, onAdd, onUpdate, onD
         initial={editing}
         projectId={projectId}
         terms={terms}
-        onSave={(e) => {
-          if (editing) onUpdate(e);
-          else onAdd(e);
-          setCreating(false);
-          setEditing(null);
+        busy={busy}
+        onSave={async (e) => {
+          setBusy(true);
+          try {
+            if (editing) await updateExpense(e);
+            else await createExpense(e);
+            await reload();
+          } finally {
+            setBusy(false);
+            setCreating(false);
+            setEditing(null);
+          }
         }}
       />
     </>
@@ -671,14 +725,16 @@ function iconBtn(color = 'var(--ink-600)'): React.CSSProperties {
   };
 }
 
-function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: {
+function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave, busy }: {
   open: boolean;
   onClose: () => void;
   initial: Expense | null;
   projectId: string;
   terms: Term[];
-  onSave: (e: Expense) => void;
+  onSave: (e: Expense) => Promise<void>;
+  busy: boolean;
 }) {
+  const { vendors } = useAppData();
   const [form, setForm] = useState<Partial<Expense>>({});
 
   useMemo(() => {
@@ -694,11 +750,10 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: 
 
   if (!open) return null;
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name || !form.amount || !form.date) return;
-    const newId = initial?.id ?? `EXP-${Date.now().toString().slice(-6)}`;
-    onSave({
-      id: newId,
+    await onSave({
+      id: initial?.id ?? '',
       project: projectId,
       name: form.name!,
       type: form.type || EXPENSE_TYPES[0],
@@ -721,8 +776,10 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: 
       subtitle="سيتم تحديث ملخص المشروع المالي تلقائيًا عند الحفظ."
       width={680}
       footer={<>
-        <Button variant="secondary" onClick={onClose}>إلغاء</Button>
-        <Button onClick={submit} icon="save">حفظ المصروف</Button>
+        <Button variant="secondary" onClick={onClose} disabled={busy}>إلغاء</Button>
+        <Button onClick={submit} icon="save" disabled={busy}>
+          {busy ? 'جارٍ الحفظ…' : 'حفظ المصروف'}
+        </Button>
       </>}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
@@ -754,12 +811,12 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: 
           <label className="field-label">المورد (اختياري)</label>
           <select className="input" value={form.vendor || ''} onChange={(e) => setForm({ ...form, vendor: e.target.value || null })}>
             <option value="">— بدون مورد —</option>
-            {VENDORS.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+            {vendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
         </div>
         <div>
           <label className="field-label">البند المرتبط (اختياري)</label>
-          <select className="input" value={form.term ?? ''} onChange={(e) => setForm({ ...form, term: e.target.value === '' ? null : Number(e.target.value) })}>
+          <select className="input" value={form.term ?? ''} onChange={(e) => setForm({ ...form, term: e.target.value === '' ? null : e.target.value })}>
             <option value="">— بدون بند —</option>
             {terms.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
           </select>
@@ -783,7 +840,7 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: 
             cursor: 'pointer',
           }}>
             <Icon name="paperclip" size={14} />
-            <span>اسحب صورة الفاتورة أو اضغط للاختيار</span>
+            <span>اسحب صورة الفاتورة أو اضغط للاختيار (قيد التطوير)</span>
           </div>
         </div>
         <div style={{ gridColumn: 'span 2' }}>
@@ -796,11 +853,10 @@ function ExpenseFormModal({ open, onClose, initial, projectId, terms, onSave }: 
 }
 
 /* =========================================================
-   Tasks / Vendors / Team / Finance / Documents / Activity
+   Other tabs (Tasks / Vendors / Team / Finance / Documents / Activity)
    ========================================================= */
 
-function TasksTab({ projectId }: { projectId: string }) {
-  const tasks = TASKS.filter((t) => t.project === projectId);
+function TasksTab({ tasks }: { tasks: import('@/types').Task[] }) {
   if (tasks.length === 0) return (
     <Card>
       <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
@@ -836,6 +892,7 @@ function TasksTab({ projectId }: { projectId: string }) {
 }
 
 function VendorsTab() {
+  const { vendors } = useAppData();
   return (
     <Card pad={0}>
       <div style={{
@@ -856,12 +913,12 @@ function VendorsTab() {
         <span>التواصل</span>
         <span style={{ textAlign: 'start' }}>المشاريع</span>
       </div>
-      {VENDORS.map((v, i) => (
+      {vendors.map((v, i) => (
         <div key={v.id} style={{
           display: 'grid',
           gridTemplateColumns: '2fr 1fr 1fr 1fr 80px',
           padding: '14px 20px',
-          borderBottom: i < VENDORS.length - 1 ? '1px solid var(--border-1)' : 'none',
+          borderBottom: i < vendors.length - 1 ? '1px solid var(--border-1)' : 'none',
           alignItems: 'center',
           fontSize: 13,
         }}>
@@ -879,6 +936,7 @@ function VendorsTab() {
 }
 
 function TeamTab({ team }: { team: string[] }) {
+  const { people } = useAppData();
   return (
     <Card pad={0}>
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center' }}>
@@ -888,10 +946,10 @@ function TeamTab({ team }: { team: string[] }) {
             صلاحياتهم الأساسية تأتي من دورهم العام، يمكن تجاوزها لهذا المشروع.
           </div>
         </div>
-        <Button icon="user-plus">إضافة عضو</Button>
+        <Button icon="user-plus" disabled title="قيد التطوير">إضافة عضو</Button>
       </div>
       {team.map((id, i) => {
-        const person = PEOPLE.find((p) => p.id === id);
+        const person = people.find((p) => p.id === id);
         return (
           <div key={id} style={{
             display: 'flex',
@@ -902,22 +960,25 @@ function TeamTab({ team }: { team: string[] }) {
           }}>
             <Avatar person={id} size={36} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name || '—'}</div>
               <div style={{ fontSize: 12, color: 'var(--ink-500)' }}>{person?.role} · {person?.city}</div>
             </div>
-            <Icon name="more-horizontal" size={16} style={{ color: 'var(--ink-500)' }} />
           </div>
         );
       })}
+      {team.length === 0 && (
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>
+          لا يوجد أعضاء فريق معيّنون لهذا المشروع.
+        </div>
+      )}
     </Card>
   );
 }
 
-function FinanceTab({ projectCode, finance }: {
-  projectCode: string;
+function FinanceTab({ payments, finance }: {
+  payments: import('@/types').Payment[];
   finance: ReturnType<typeof computeProjectFinance>;
 }) {
-  const projectPayments = PAYMENTS.filter((p) => p.project === projectCode);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{
@@ -967,12 +1028,12 @@ function FinanceTab({ projectCode, finance }: {
           <span>الاستحقاق</span>
           <span>الحالة</span>
         </div>
-        {projectPayments.map((p, i) => (
+        {payments.map((p, i) => (
           <div key={p.id} style={{
             display: 'grid',
             gridTemplateColumns: '1fr 2fr 1fr 1fr 130px',
             padding: '14px 20px',
-            borderBottom: i < projectPayments.length - 1 ? '1px solid var(--border-1)' : 'none',
+            borderBottom: i < payments.length - 1 ? '1px solid var(--border-1)' : 'none',
             alignItems: 'center',
             fontSize: 13,
           }}>
@@ -983,7 +1044,7 @@ function FinanceTab({ projectCode, finance }: {
             <PaymentChip status={p.status} />
           </div>
         ))}
-        {projectPayments.length === 0 && (
+        {payments.length === 0 && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>
             لا توجد فواتير مسجَّلة على هذا المشروع بعد.
           </div>
@@ -1033,10 +1094,10 @@ function DocumentsTab() {
         <Icon name="file-text" size={26} style={{ color: 'var(--ink-300)' }} />
         <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-700)', fontWeight: 700 }}>المستندات</div>
         <div style={{ marginTop: 4, fontSize: 12 }}>
-          ارفع العقود، المخططات، تقارير الفحص، وتراخيص العمل هنا. يتم ربط رفع الملفات بـ Supabase Storage لاحقًا.
+          ارفع العقود، المخططات، وتقارير الفحص. سيتم ربط رفع الملفات بـ Supabase Storage لاحقًا.
         </div>
         <div style={{ marginTop: 16 }}>
-          <Button icon="paperclip">رفع مستند</Button>
+          <Button icon="paperclip" disabled>رفع مستند</Button>
         </div>
       </div>
     </Card>
@@ -1046,26 +1107,12 @@ function DocumentsTab() {
 function ActivityTab() {
   return (
     <Card>
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--ink-900)' }}>
-        سجل النشاطات
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {ACTIVITY.map((a, i) => {
-          const person = PEOPLE.find((p) => p.id === a.actor);
-          return (
-            <div key={i} style={{ display: 'flex', gap: 12 }}>
-              <Avatar person={a.actor} size={32} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-800)' }}>
-                  <b style={{ color: 'var(--ink-900)' }}>{person?.name}</b>{' '}
-                  <span style={{ color: 'var(--ink-600)' }}>{a.verb}</span>{' '}
-                  <span>{a.target}</span>
-                </div>
-                <div style={{ fontSize: 11.5, color: 'var(--ink-500)', marginTop: 2 }}>{a.when}</div>
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+        <Icon name="scroll-text" size={26} style={{ color: 'var(--ink-300)' }} />
+        <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-700)', fontWeight: 700 }}>سجل النشاطات</div>
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          سيتم تعبئته تلقائيًا عند تنفيذ عمليات على المشروع (إضافة بنود، مصروفات، اعتمادات).
+        </div>
       </div>
     </Card>
   );

@@ -1,7 +1,9 @@
 import { Card } from '@/components/Card';
 import { Avatar } from '@/components/Avatar';
 import { Chip } from '@/components/Chip';
-import { TASKS } from '@/data/mock';
+import { Icon } from '@/components/Icon';
+import { useAsync } from '@/hooks/useAsync';
+import { listTasks } from '@/data/api';
 import type { TaskStatus } from '@/types';
 
 const COLUMNS: { id: TaskStatus; label: string; tone: 'neutral' | 'progress' | 'review' | 'completed' }[] = [
@@ -12,6 +14,19 @@ const COLUMNS: { id: TaskStatus; label: string; tone: 'neutral' | 'progress' | '
 ];
 
 export function TaskBoard() {
+  const { data, loading } = useAsync(() => listTasks(), []);
+  const tasks = data ?? [];
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-500)' }}>جارٍ التحميل…</div>;
+  if (tasks.length === 0) return (
+    <Card>
+      <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--ink-500)' }}>
+        <Icon name="check-check" size={26} style={{ color: 'var(--ink-300)' }} />
+        <div style={{ marginTop: 10, fontSize: 13 }}>لا توجد مهام بعد.</div>
+      </div>
+    </Card>
+  );
+
   return (
     <div style={{
       display: 'grid',
@@ -20,15 +35,10 @@ export function TaskBoard() {
       minHeight: 'calc(100vh - 160px)',
     }}>
       {COLUMNS.map((col) => {
-        const items = TASKS.filter((t) => t.status === col.id);
+        const items = tasks.filter((t) => t.status === col.id);
         return (
           <div key={col.id} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 4px',
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px' }}>
               <Chip tone={col.tone}>{col.label}</Chip>
               <span className="num" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-500)' }}>{items.length}</span>
             </div>

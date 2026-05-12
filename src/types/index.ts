@@ -69,7 +69,7 @@ export interface Payment {
 }
 
 export interface Term {
-  id: number;
+  id: string;
   project: string;
   title: string;
   type: string;
@@ -89,7 +89,7 @@ export interface Expense {
   amount: number;
   date: string;
   vendor?: string | null;
-  term?: number | null;
+  term?: string | null;
   method: 'cash' | 'bank_transfer' | 'cheque' | 'card';
   invoiceNo?: string;
   attachment?: string | null;

@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
-import { PROJECTS } from '@/data/mock';
+import { getProject } from '@/data/api';
 
 const TITLES: Record<string, { t: string; s?: string }> = {
   'dashboard':    { t: 'الرئيسية',           s: 'نظرة شاملة على مشاريعك ومهامك' },
@@ -23,23 +24,36 @@ const TITLES: Record<string, { t: string; s?: string }> = {
 export function AppLayout() {
   const location = useLocation();
   const params = useParams();
+  const [projectTitle, setProjectTitle] = useState<{ t: string; s: string } | null>(null);
 
-  // Resolve page title — handles /app/<screen> and /app/projects/:id
   const segments = location.pathname.split('/').filter(Boolean);
+  const screen = segments[1];
+  const isProjectDetail = screen === 'projects' && (params as { projectId?: string }).projectId;
+  const projectId = (params as { projectId?: string }).projectId;
+
+  useEffect(() => {
+    if (!isProjectDetail || !projectId) {
+      setProjectTitle(null);
+      return;
+    }
+    let cancelled = false;
+    getProject(projectId).then((p) => {
+      if (!cancelled) {
+        if (p) setProjectTitle({ t: p.name, s: p.code });
+        else setProjectTitle({ t: 'مشروع', s: '' });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [isProjectDetail, projectId]);
+
   let title = 'ProTrack';
   let subtitle: string | undefined;
-
-  if (segments[0] === 'app') {
-    const screen = segments[1];
-    if (screen === 'projects' && (params as { projectId?: string }).projectId) {
-      const id = (params as { projectId: string }).projectId;
-      const p = PROJECTS.find((x) => x.id === id);
-      if (p) { title = p.name; subtitle = p.code; }
-      else { title = 'مشروع'; }
-    } else if (screen && TITLES[screen]) {
-      title = TITLES[screen].t;
-      subtitle = TITLES[screen].s;
-    }
+  if (isProjectDetail && projectTitle) {
+    title = projectTitle.t;
+    subtitle = projectTitle.s;
+  } else if (screen && TITLES[screen]) {
+    title = TITLES[screen].t;
+    subtitle = TITLES[screen].s;
   }
 
   return (

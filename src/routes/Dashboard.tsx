@@ -3,21 +3,32 @@ import { Card } from '@/components/Card';
 import { KPI } from '@/components/KPI';
 import { StatusChip } from '@/components/Chip';
 import { Progress } from '@/components/Progress';
-import { Avatar, AvatarStack } from '@/components/Avatar';
+import { AvatarStack } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
-import { useAuth } from '@/stores/auth';
-import { ACTIVITY, EXPENSES, PAYMENTS, PEOPLE, TASKS, visibleProjects } from '@/data/mock';
+import { useAsync } from '@/hooks/useAsync';
+import { listExpenses, listPayments, listProjects, listTasks } from '@/data/api';
 import { SARw } from '@/lib/format';
 
 export function Dashboard() {
-  const { role, personId } = useAuth();
   const navigate = useNavigate();
-  const projects = visibleProjects(role, personId);
+
+  const projectsQ = useAsync(() => listProjects(), []);
+  const expensesQ = useAsync(() => listExpenses(), []);
+  const paymentsQ = useAsync(() => listPayments(), []);
+  const tasksQ    = useAsync(() => listTasks(),    []);
+
+  const loading = projectsQ.loading || expensesQ.loading || paymentsQ.loading || tasksQ.loading;
+  if (loading) return <LoadingShell />;
+
+  const projects = projectsQ.data ?? [];
+  const expenses = expensesQ.data ?? [];
+  const payments = paymentsQ.data ?? [];
+  const tasks = tasksQ.data ?? [];
 
   const totalBudget = projects.reduce((s, p) => s + p.budget, 0);
-  const totalSpent = projects.reduce((s, p) => s + p.spent, 0);
-  const overdueInvoices = PAYMENTS.filter((p) => p.status === 'overdue').length;
-  const inProgressTasks = TASKS.filter((t) => t.status === 'progress' || t.status === 'review').length;
+  const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
+  const overdueInvoices = payments.filter((p) => p.status === 'overdue').length;
+  const inProgressTasks = tasks.filter((t) => t.status === 'progress' || t.status === 'review').length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -30,7 +41,8 @@ export function Dashboard() {
           sub={`من ${projects.length} مشروع`} />
         <KPI label="إجمالي الميزانية" value={SARw(totalBudget)} sub="عبر كل المشاريع" />
         <KPI label="إجمالي المصروف" value={SARw(totalSpent)}
-          delta={`${((totalSpent / Math.max(totalBudget, 1)) * 100).toFixed(1)}%`} deltaUp={false} sub="من الميزانية" />
+          delta={totalBudget > 0 ? `${((totalSpent / totalBudget) * 100).toFixed(1)}%` : undefined}
+          deltaUp={false} sub="من الميزانية" />
         <KPI label="فواتير متأخرة" value={String(overdueInvoices)}
           valueColor={overdueInvoices > 0 ? 'var(--danger-700)' : undefined} sub="تستحق المتابعة" />
         <KPI label="مهام نشطة" value={String(inProgressTasks)} sub="قيد التنفيذ والمراجعة" />
@@ -41,7 +53,6 @@ export function Dashboard() {
         gridTemplateColumns: '2fr 1fr',
         gap: 16,
       }}>
-        {/* My projects */}
         <Card pad={0}>
           <div style={{
             padding: '14px 20px',
@@ -115,51 +126,44 @@ export function Dashboard() {
             </div>
           ))}
           {projects.length === 0 && (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>
-              لا توجد مشاريع معيّنة لك بعد.
-            </div>
+            <EmptyRow text="لا توجد مشاريع معيّنة لك بعد." />
           )}
         </Card>
 
-        {/* Recent activity */}
         <Card>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)', marginBottom: 14 }}>
             النشاط الأخير
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {ACTIVITY.map((a, i) => {
-              const person = PEOPLE.find((p) => p.id === a.actor);
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--ink-700)' }}>
+            {expenses.slice(0, 6).map((e) => {
+              const project = projects.find((p) => p.id === e.project);
               return (
-                <div key={i} style={{ display: 'flex', gap: 10 }}>
-                  <Avatar person={a.actor} size={28} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ink-800)' }}>
-                      <b style={{ color: 'var(--ink-900)' }}>{person?.name || a.actor}</b>{' '}
-                      <span style={{ color: 'var(--ink-600)' }}>{a.verb}</span>{' '}
-                      <span>{a.target}</span>
+                <div key={e.id} style={{ display: 'flex', gap: 8 }}>
+                  <Icon name="receipt" size={14} style={{ color: 'var(--ink-500)', marginTop: 3 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: 'var(--ink-800)' }}>
+                      <b>{e.name}</b> — <span className="money">{SARw(e.amount)}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2 }}>{a.when}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2 }}>
+                      {project?.code || '—'} · {e.date}
+                    </div>
                   </div>
                 </div>
               );
             })}
+            {expenses.length === 0 && <EmptyRow text="لا توجد مصروفات بعد." />}
           </div>
         </Card>
       </div>
 
-      {/* Recent expenses */}
       <Card pad={0}>
         <div style={{
           padding: '14px 20px',
           borderBottom: '1px solid var(--border-1)',
-          display: 'flex',
-          alignItems: 'center',
         }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>آخر المصروفات</div>
-            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
-              المصروفات المسجّلة عبر كل المشاريع.
-            </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-900)' }}>آخر المصروفات</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 3 }}>
+            المصروفات المسجّلة عبر كل المشاريع.
           </div>
         </div>
         <div style={{
@@ -180,23 +184,20 @@ export function Dashboard() {
           <span>التاريخ</span>
           <span style={{ textAlign: 'start' }}>المبلغ</span>
         </div>
-        {EXPENSES.slice(0, 6).map((e, i, arr) => {
+        {expenses.slice(0, 8).map((e, i, arr) => {
           const project = projects.find((p) => p.id === e.project);
           return (
-            <div
-              key={e.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
-                padding: '12px 20px',
-                borderBottom: i < arr.length - 1 ? '1px solid var(--border-1)' : 'none',
-                alignItems: 'center',
-                fontSize: 13,
-              }}
-            >
+            <div key={e.id} style={{
+              display: 'grid',
+              gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
+              padding: '12px 20px',
+              borderBottom: i < arr.length - 1 ? '1px solid var(--border-1)' : 'none',
+              alignItems: 'center',
+              fontSize: 13,
+            }}>
               <div>
                 <div style={{ fontWeight: 600, color: 'var(--ink-900)' }}>{e.name}</div>
-                <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2 }}>{e.id}</div>
+                <div className="num" style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2 }}>{e.id.slice(0, 8)}</div>
               </div>
               <span style={{ color: 'var(--ink-700)' }}>{e.type}</span>
               <span style={{ color: 'var(--ink-700)' }}>{project?.code || '—'}</span>
@@ -205,7 +206,27 @@ export function Dashboard() {
             </div>
           );
         })}
+        {expenses.length === 0 && <EmptyRow text="لا توجد مصروفات مسجَّلة بعد." />}
       </Card>
     </div>
+  );
+}
+
+function LoadingShell() {
+  return (
+    <div style={{
+      padding: 60,
+      textAlign: 'center',
+      color: 'var(--ink-500)',
+      fontSize: 13,
+    }}>
+      جارٍ التحميل…
+    </div>
+  );
+}
+
+function EmptyRow({ text }: { text: string }) {
+  return (
+    <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>{text}</div>
   );
 }

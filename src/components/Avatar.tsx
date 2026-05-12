@@ -1,15 +1,36 @@
-import { PEOPLE } from '@/data/mock';
+import { useAppData } from '@/contexts/AppData';
 import type { Person } from '@/types';
 
 export interface AvatarProps {
-  person: string | Person | undefined;
+  person: string | Person | undefined | null;
   size?: number;
   ring?: boolean;
 }
 
 export function Avatar({ person, size = 28, ring = false }: AvatarProps) {
-  const p = typeof person === 'string' ? PEOPLE.find((x) => x.id === person) : person;
-  if (!p) return null;
+  const { people } = useAppData();
+  const p = typeof person === 'string' ? people.find((x) => x.id === person) : person;
+  // Fallback: gray bubble with question mark if user hasn't been loaded yet
+  if (!p) {
+    return (
+      <span style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--ink-200)',
+        color: 'var(--ink-500)',
+        flexShrink: 0,
+        border: ring ? '2px solid #fff' : 'none',
+        boxSizing: 'border-box',
+        fontSize: 10,
+      }}>
+        ··
+      </span>
+    );
+  }
   const fs = size <= 22 ? 10 : size <= 28 ? 11 : size <= 36 ? 12 : 14;
   return (
     <span style={{

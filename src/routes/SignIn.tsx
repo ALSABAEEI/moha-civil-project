@@ -6,17 +6,26 @@ import { useAuth } from '@/stores/auth';
 import logoIcon from '../../design-system/assets/logo-icon.svg';
 
 export function SignIn() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('admin@gmail.com');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock — no validation. Real auth lands when Supabase is wired up.
-    signIn();
-    navigate('/onboarding');
+    setError(null);
+    setSubmitting(true);
+    try {
+      await signIn(email.trim(), password);
+      navigate('/app/dashboard', { replace: true });
+    } catch (err: any) {
+      setError(arabicError(err?.message));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -53,6 +62,7 @@ export function SignIn() {
               placeholder="name@protrack.sa"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
             />
           </div>
           <div>
@@ -66,6 +76,7 @@ export function SignIn() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={submitting}
                 style={{ paddingInlineStart: 40 }}
               />
               <button
@@ -90,16 +101,27 @@ export function SignIn() {
               </button>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-700)', cursor: 'pointer' }}>
-              <input type="checkbox" defaultChecked style={{ accentColor: 'var(--teal-500)' }} />
-              تذكّرني على هذا الجهاز
-            </label>
-            <a href="#" style={{ fontSize: 13, color: 'var(--teal-700)', fontWeight: 600 }}>
-              نسيت كلمة المرور؟
-            </a>
-          </div>
-          <Button type="submit" size="lg" block>تسجيل الدخول</Button>
+
+          {error && (
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              background: 'var(--danger-050)',
+              border: '1px solid var(--danger-100)',
+              color: 'var(--danger-700)',
+              fontSize: 13,
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+            }}>
+              <Icon name="circle-alert" size={14} />
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" size="lg" block disabled={submitting}>
+            {submitting ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول'}
+          </Button>
         </form>
 
         <div style={{
@@ -113,13 +135,14 @@ export function SignIn() {
           alignItems: 'flex-start',
         }}>
           <Icon name="info" size={16} style={{ color: 'var(--info-700)', marginTop: 2 }} />
-          <div style={{ fontSize: 12.5, color: 'var(--ink-700)', lineHeight: 1.6 }}>
-            <b>نسخة تجريبية:</b> أي بريد وكلمة مرور تعمل — ستختار دورك في الخطوة التالية.
+          <div style={{ fontSize: 12.5, color: 'var(--ink-700)', lineHeight: 1.7 }}>
+            <b>حساب تجريبي:</b> <span className="num" dir="ltr">admin@gmail.com</span> / <span className="num" dir="ltr">12345678</span><br />
+            فريق العرض (مهندسون/مالية/مدير مشروع): كلمة مرور <span className="num" dir="ltr">demo1234</span>
           </div>
         </div>
       </div>
 
-      {/* Marketing panel — only gradient surface in the system */}
+      {/* Marketing panel */}
       <div style={{
         flex: '1 1 0',
         background: 'radial-gradient(at 70% 30%, rgba(23,162,162,0.25), transparent 50%), radial-gradient(at 30% 80%, rgba(40,90,142,0.35), transparent 50%), #07172B',
@@ -143,4 +166,12 @@ export function SignIn() {
       </div>
     </div>
   );
+}
+
+function arabicError(msg: string | undefined): string {
+  if (!msg) return 'تعذّر تسجيل الدخول.';
+  if (/invalid login/i.test(msg)) return 'البريد أو كلمة المرور غير صحيحة.';
+  if (/email not confirmed/i.test(msg)) return 'لم يتم تأكيد البريد الإلكتروني بعد.';
+  if (/network/i.test(msg)) return 'تعذّر الاتصال بالخادم.';
+  return msg;
 }

@@ -7,7 +7,8 @@ import { AvatarStack } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { useAuth } from '@/stores/auth';
-import { visibleProjects } from '@/data/mock';
+import { useAsync } from '@/hooks/useAsync';
+import { listProjects } from '@/data/api';
 import { SARw } from '@/lib/format';
 import type { ProjectStatus } from '@/types';
 
@@ -21,14 +22,14 @@ const STATUS_OPTIONS: { id: ProjectStatus | 'all'; label: string }[] = [
 ];
 
 export function ProjectsList() {
-  const { role, personId } = useAuth();
+  const { role } = useAuth();
   const navigate = useNavigate();
-  const all = visibleProjects(role, personId);
+  const { data: all, loading, error } = useAsync(() => listProjects(), []);
   const [filter, setFilter] = useState<ProjectStatus | 'all'>('all');
   const [q, setQ] = useState('');
 
   const projects = useMemo(() => {
-    return all.filter((p) => {
+    return (all ?? []).filter((p) => {
       if (filter !== 'all' && p.status !== filter) return false;
       if (q && !`${p.name} ${p.code} ${p.client}`.toLowerCase().includes(q.toLowerCase())) return false;
       return true;
@@ -37,9 +38,11 @@ export function ProjectsList() {
 
   const canCreate = role === 'admin' || role === 'pm';
 
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-500)' }}>جارٍ التحميل…</div>;
+  if (error) return <ErrorState message={error} />;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Filters */}
       <Card pad={14}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{
@@ -95,12 +98,11 @@ export function ProjectsList() {
             })}
           </div>
           <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 8 }}>
-            {canCreate && <Button icon="plus">مشروع جديد</Button>}
+            {canCreate && <Button icon="plus" disabled title="قيد التطوير">مشروع جديد</Button>}
           </div>
         </div>
       </Card>
 
-      {/* Table */}
       <Card pad={0}>
         <div style={{
           display: 'grid',
@@ -150,7 +152,7 @@ export function ProjectsList() {
               </div>
             </div>
             <span className="money" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-900)' }}>{SARw(p.budget)}</span>
-            <span className="money" style={{ fontSize: 13, color: p.spent / p.budget > 0.9 ? 'var(--danger-700)' : 'var(--ink-700)' }}>
+            <span className="money" style={{ fontSize: 13, color: p.budget > 0 && p.spent / p.budget > 0.9 ? 'var(--danger-700)' : 'var(--ink-700)' }}>
               {SARw(p.spent)}
             </span>
             <AvatarStack ids={p.team} size={22} max={3} />
@@ -169,5 +171,17 @@ export function ProjectsList() {
         )}
       </Card>
     </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <Card>
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <Icon name="circle-alert" size={26} style={{ color: 'var(--danger-500)' }} />
+        <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-700)' }}>تعذّر تحميل المشاريع</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--ink-500)' }}>{message}</div>
+      </div>
+    </Card>
   );
 }

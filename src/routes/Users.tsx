@@ -2,7 +2,10 @@ import { Card } from '@/components/Card';
 import { Chip } from '@/components/Chip';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
-import { PEOPLE, ROLE_LABEL, USERS } from '@/data/mock';
+import { useAsync } from '@/hooks/useAsync';
+import { listUsers } from '@/data/api';
+import { useAppData } from '@/contexts/AppData';
+import { ROLE_LABEL } from '@/lib/roles';
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'نشط',
@@ -16,6 +19,9 @@ const STATUS_TONE: Record<string, 'completed' | 'review' | 'blocked'> = {
 };
 
 export function Users() {
+  const { data: users, loading } = useAsync(() => listUsers(), []);
+  const { people } = useAppData();
+
   return (
     <Card pad={0}>
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-1)', display: 'flex', alignItems: 'center' }}>
@@ -25,11 +31,11 @@ export function Users() {
             إدارة الأدوار، الصلاحيات، ودعوة الأعضاء الجدد.
           </div>
         </div>
-        <Button icon="user-plus">دعوة عضو</Button>
+        <Button icon="user-plus" disabled title="قيد التطوير">دعوة عضو</Button>
       </div>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr 1fr',
+        gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr',
         padding: '10px 20px',
         background: 'var(--ink-050)',
         borderBottom: '1px solid var(--border-2)',
@@ -44,34 +50,35 @@ export function Users() {
         <span>الدور</span>
         <span>القسم</span>
         <span>الحالة</span>
-        <span>آخر دخول</span>
       </div>
-      {USERS.map((u, i) => {
-        const person = PEOPLE.find((p) => p.id === u.personId);
+      {(users ?? []).map((u, i, arr) => {
+        const person = people.find((p) => p.id === u.id);
         return (
           <div key={u.id} style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr 1fr',
+            gridTemplateColumns: '2fr 1.4fr 1fr 1fr 1fr',
             padding: '14px 20px',
-            borderBottom: i < USERS.length - 1 ? '1px solid var(--border-1)' : 'none',
+            borderBottom: i < arr.length - 1 ? '1px solid var(--border-1)' : 'none',
             alignItems: 'center',
             fontSize: 13,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Avatar person={u.personId} size={30} />
+              <Avatar person={u.id} size={30} />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--ink-500)' }}>{person?.role}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-900)' }}>{person?.name || '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-500)' }}>{person?.role || ''}</div>
               </div>
             </div>
             <span className="num" style={{ color: 'var(--ink-700)', direction: 'ltr', textAlign: 'start' }}>{u.email}</span>
             <span style={{ color: 'var(--ink-700)' }}>{ROLE_LABEL[u.role]}</span>
             <span style={{ color: 'var(--ink-700)' }}>{u.department}</span>
             <Chip tone={STATUS_TONE[u.status]}>{STATUS_LABEL[u.status]}</Chip>
-            <span className="num" style={{ color: 'var(--ink-600)' }}>{u.lastSeen}</span>
           </div>
         );
       })}
+      {loading && (
+        <div style={{ padding: 30, textAlign: 'center', color: 'var(--ink-500)', fontSize: 13 }}>جارٍ التحميل…</div>
+      )}
     </Card>
   );
 }
